@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0f2420">
+<title>Gate Call</title>
+<style>
+  :root { --bg:#0f2420; --card:#173630; --line:#24493f; --ink:#eef3ee; --mut:#9bb0a8; --gold:#e7b96a; --goldink:#1b1405; --red:#e5645b; --green:#5cc08a; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { min-height:100dvh; display:flex; flex-direction:column; }
+  main { flex:1; width:100%; max-width:480px; margin:0 auto; padding:22px 20px 12px; display:flex; flex-direction:column; gap:16px; }
+  .top { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .brand { color:var(--gold); font-weight:800; font-size:20px; letter-spacing:.5px; }
+  select { font:inherit; font-size:14px; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:10px; padding:7px 8px; }
+  h1 { font-size:28px; line-height:1.2; margin:6px 0 0; }
+  p { color:var(--mut); line-height:1.5; margin:0; font-size:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:12px; }
+  button { font:inherit; font-weight:800; font-size:18px; border:0; border-radius:14px; padding:16px; cursor:pointer; background:var(--gold); color:var(--goldink); width:100%; }
+  button.ghost { background:transparent; color:var(--ink); border:1px solid var(--line); font-weight:700; font-size:16px; }
+  button.red { background:var(--red); color:#fff; }
+  button:disabled { opacity:.45; cursor:default; }
+  label { display:flex; flex-direction:column; gap:6px; color:var(--mut); font-size:14px; }
+  input[type=text], input[type=tel], textarea { font:inherit; font-size:16px; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:13px; width:100%; }
+  textarea { min-height:84px; resize:vertical; }
+  input:focus, textarea:focus, button:focus-visible, select:focus { outline:2px solid var(--gold); outline-offset:2px; }
+  .rec { color:var(--red); font-weight:700; font-size:14px; }
+  .timer { font-size:44px; font-weight:800; text-align:center; letter-spacing:2px; }
+  .pulse { width:84px; height:84px; border-radius:50%; background:var(--gold); margin:8px auto; animation:p 1.2s infinite ease-in-out; }
+  @keyframes p { 0%,100% { transform:scale(.85); opacity:.6 } 50% { transform:scale(1.05); opacity:1 } }
+  @media (prefers-reduced-motion: reduce) { .pulse { animation:none } }
+  .sales { border-color:var(--gold); }
+  .sales b { font-size:17px; }
+  .reply { color:var(--ink); font-size:20px; font-weight:700; }
+  footer { max-width:480px; margin:0 auto; width:100%; padding:10px 20px calc(18px + env(safe-area-inset-bottom)); color:var(--mut); font-size:12px; line-height:1.5; }
+  .err { color:var(--red); font-size:14px; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+<footer id="foot"></footer>
+<div id="audio" hidden></div>
+<script src="livekit-client.umd.js"></script>
+<script>
+/* ================= CONFIG (filled in during setup) ================= */
+var SUPABASE_URL = 'https://jcksphuqrrwitmmmgzov.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_KdYI50_eGRfM2AUhcA5CfA_bBrOB_B7';   // public key: safe to show
+var SALES_URL = '';   // order page, once it exists. NO plate or referral code is added: this is Gate Call's own sale.
+
+/* ================= WORDING =================
+   English is the master. The other four are first drafts: have a native speaker check each one before launch. */
+var T = {
+  en: { lang:'English', callTitle:'Call the house', callBody:'The people here will hear your call on their phone. They will not see your number.', callBtn:'Call the house',
+    someRec:'Some calls may be recorded.', calling:'Calling…', waiting:'Waiting for someone to answer.', mic:'Please allow the microphone so they can hear you.', cancel:'Cancel',
+    connected:'Connected', speak:'Speak now. This call is short on purpose.', hang:'Hang up', ended:'Call ended', thanks:'Thank you.',
+    unTitle:'Nobody can take your call right now', unBody:'Would you like to leave a message instead?', limited:'To avoid spam, calls to this house are limited for a few hours. Please leave a message instead.',
+    noAnswer:'Nobody answered. Would you like to leave a message?', declined:'They could not take your call.', theySaid:'They replied:',
+    leave:'Leave a message', close:'Close', msgTitle:'Leave a message', name:'Your name', reason:'Why are you here? (optional)', phone:'Your cellphone number, so they can call you back (optional)',
+    photo:'Add a photo of yourself? It helps them know who you are (optional)', send:'Send message', sent:'Sent. They will get back to you.', needName:'Please type your name.',
+    salesText:'Want Gate Call for your home?', salesBody:'Visitors can reach you from your gate without ever seeing your number.', salesBtn:'Order here', soon:'Ordering opens soon.', back:'Back',
+    notSet:'This plate is not set up yet', notSetBody:'The owner has not switched it on yet. Please knock or try again later.', recNow:'This call is now being recorded.',
+    oops:'Something went wrong. Check your internet and try again.', again:'Try again',
+    privacy:'We keep a random device identifier, your IP address and browser type to prevent abuse. If you leave a message we share your name, reason and any number or photo you add with the household you are visiting.' },
+  zu: { lang:'isiZulu', callTitle:'Shayela indlu', callBody:'Abantu balapha bazozwa ucingo lwakho ocingweni lwabo. Ngeke ayibone inombolo yakho.', callBtn:'Shayela indlu',
+    someRec:'Ezinye izingcingo zingaqoshwa.', calling:'Iyashaya…', waiting:'Silinde umuntu ozophendula.', mic:'Sicela uvumele imakrofoni ukuze bakuzwe.', cancel:'Khansela',
+    connected:'Kuxhunyiwe', speak:'Khuluma manje. Lolu cingo lufushane ngamabomu.', hang:'Vala ucingo', ended:'Ucingo luphelile', thanks:'Ngiyabonga.',
+    unTitle:'Akekho ongaluphendula ucingo lwakho manje', unBody:'Ungathanda ukushiya umlayezo esikhundleni salokho?', limited:'Ukuvimbela ugaxekile, izingcingo kule ndlu zinqunyelwe amahora ambalwa. Sicela ushiye umlayezo.',
+    noAnswer:'Akekho ophendulile. Ungathanda ukushiya umlayezo?', declined:'Abakwazanga ukuphendula ucingo lwakho.', theySaid:'Baphendule bathi:',
+    leave:'Shiya umlayezo', close:'Vala', msgTitle:'Shiya umlayezo', name:'Igama lakho', reason:'Ulapha ngani? (akuphoqelekile)', phone:'Inombolo yakho yeselula, ukuze bakushayele (akuphoqelekile)',
+    photo:'Faka isithombe sakho? Sibasiza bazi ukuthi ungubani (akuphoqelekile)', send:'Thumela umlayezo', sent:'Kuthunyelwe. Bazokuphendula.', needName:'Sicela ubhale igama lakho.',
+    salesText:'Ufuna i-Gate Call ekhaya lakho?', salesBody:'Izivakashi zingakufinyelela zisesangweni zingayiboni inombolo yakho.', salesBtn:'Oda lapha', soon:'Ukuoda kuzovulwa maduze.', back:'Emuva',
+    notSet:'Le pleyiti ayikasethwa', notSetBody:'Umnikazi akakayivuli. Sicela ungqongqoze noma uzame futhi kamuva.', recNow:'Lolu cingo seluyaqoshwa.',
+    oops:'Kukhona okungahambanga kahle. Hlola i-inthanethi bese uzama futhi.', again:'Zama futhi',
+    privacy:'Sigcina inombolo yedivayisi engahleliwe, ikheli lakho le-IP nohlobo lwesiphequluli ukuvimbela ukuhlukumeza. Uma ushiya umlayezo, sabelana ngegama lakho, isizathu nanoma iyiphi inombolo noma isithombe osifakayo nomndeni owuvakashele.' },
+  af: { lang:'Afrikaans', callTitle:'Bel die huis', callBody:'Die mense hier sal jou oproep op hul foon hoor. Hulle sal nie jou nommer sien nie.', callBtn:'Bel die huis',
+    someRec:'Sommige oproepe kan opgeneem word.', calling:'Bel…', waiting:'Wag vir iemand om te antwoord.', mic:'Laat asseblief die mikrofoon toe sodat hulle jou kan hoor.', cancel:'Kanselleer',
+    connected:'Verbind', speak:'Praat nou. Hierdie oproep is doelbewus kort.', hang:'Lui af', ended:'Oproep beëindig', thanks:'Dankie.',
+    unTitle:'Niemand kan nou jou oproep neem nie', unBody:'Wil jy eerder ’n boodskap los?', limited:'Om strooipos te keer, is oproepe na hierdie huis vir ’n paar uur beperk. Los asseblief eerder ’n boodskap.',
+    noAnswer:'Niemand het geantwoord nie. Wil jy ’n boodskap los?', declined:'Hulle kon nie jou oproep neem nie.', theySaid:'Hulle het geantwoord:',
+    leave:'Los ’n boodskap', close:'Maak toe', msgTitle:'Los ’n boodskap', name:'Jou naam', reason:'Hoekom is jy hier? (opsioneel)', phone:'Jou selfoonnommer, sodat hulle jou kan terugbel (opsioneel)',
+    photo:'Voeg ’n foto van jouself by? Dit help hulle om te weet wie jy is (opsioneel)', send:'Stuur boodskap', sent:'Gestuur. Hulle sal na jou terugkom.', needName:'Tik asseblief jou naam.',
+    salesText:'Wil jy Gate Call vir jou huis hê?', salesBody:'Besoekers kan jou by jou hek bereik sonder om ooit jou nommer te sien.', salesBtn:'Bestel hier', soon:'Bestellings open binnekort.', back:'Terug',
+    notSet:'Hierdie plaat is nog nie opgestel nie', notSetBody:'Die eienaar het dit nog nie aangeskakel nie. Klop asseblief of probeer later weer.', recNow:'Hierdie oproep word nou opgeneem.',
+    oops:'Iets het verkeerd geloop. Kyk na jou internet en probeer weer.', again:'Probeer weer',
+    privacy:'Ons hou ’n ewekansige toestel-ID, jou IP-adres en blaaiertipe om misbruik te voorkom. As jy ’n boodskap los, deel ons jou naam, rede en enige nommer of foto wat jy byvoeg met die huishouding wat jy besoek.' },
+  ts: { lang:'Xitsonga', callTitle:'Ringela yindlu', callBody:'Vanhu va laha va ta twa riqingho ra wena eka foni ya vona. A va nge yi voni nomboro ya wena.', callBtn:'Ringela yindlu',
+    someRec:'Swiqingho swin’wana swi nga rhekhodiwa.', calling:'Ri ringa…', waiting:'Hi rindzele un’wana leswaku a hlamula.', mic:'Hi kombela u pfumelela maykrofoni leswaku va ku twa.', cancel:'Khansela',
+    connected:'Swi hlanganile', speak:'Vulavula sweswi. Riqingho leri ri komile hi xikongomelo.', hang:'Tima riqingho', ended:'Riqingho ri herile', thanks:'Ndza khensa.',
+    unTitle:'A ku na loyi a nga hlamulaka riqingho ra wena sweswi', unBody:'Xana u nga lava ku siya rungula?', limited:'Ku sivela swiqingho swo tala, swiqingho eka yindlu leyi swi pimiwile tiawara ti nga ri tingani. Hi kombela u siya rungula.',
+    noAnswer:'A ku na loyi a hlamuleke. Xana u nga lava ku siya rungula?', declined:'A va swi kotanga ku hlamula riqingho ra wena.', theySaid:'Va hlamule va ku:',
+    leave:'Siya rungula', close:'Pfala', msgTitle:'Siya rungula', name:'Vito ra wena', reason:'U le ka yini laha? (a swi bohi)', phone:'Nomboro ya wena ya selfoni, leswaku va ku ringela (a swi bohi)',
+    photo:'Engetela xifaniso xa wena? Xi va pfuna ku tiva leswaku u mani (a swi bohi)', send:'Rhumela rungula', sent:'Ri rhumeriwile. Va ta ku hlamula.', needName:'Hi kombela u tsala vito ra wena.',
+    salesText:'U lava Gate Call ekaya ra wena?', salesBody:'Vaendzi va nga ku kuma va ri egedeni handle ko vona nomboro ya wena.', salesBtn:'Oda laha', soon:'Ku oda ku ta pfuleka ku nga ri khale.', back:'Endzhaku',
+    notSet:'Pleyiti leyi a yi si lulamisiwa', notSetBody:'N’wini wa yona a nga si yi pfula. Hi kombela u gongondza kumbe u ringeta endzhaku.', recNow:'Riqingho leri ri rhekhodiwa sweswi.',
+    oops:'Ku na xihoxo. Kambela inthanete u tlhela u ringeta.', again:'Ringeta nakambe',
+    privacy:'Hi hlayisa nomboro ya xitirhisiwa leyi nga hlawuriwangiki, adirese ya wena ya IP na muxaka wa bulawuzara ku sivela ku tirhisiwa hi ndlela yo biha. Loko u siya rungula, hi avelana vito ra wena, xivangelo na nomboro kumbe xifaniso lexi u xi engetelaka na ndyangu lowu u wu endzelaka.' },
+  st: { lang:'Sesotho', callTitle:'Letsetsa ntlo', callBody:'Batho ba mona ba tla utlwa mohala wa hao fonong ya bona. Ba ke ke ba bona nomoro ya hao.', callBtn:'Letsetsa ntlo',
+    someRec:'Mehala e meng e ka rekotwa.', calling:'E a letsa…', waiting:'Re emetse motho ya tla araba.', mic:'Ka kopo dumella maekrofone hore ba o utlwe.', cancel:'Hlakola',
+    connected:'Ho hokahane', speak:'Bua jwale. Mohala ona o mokgutshwane ka boomo.', hang:'Kwala mohala', ended:'Mohala o fedile', thanks:'Ke a leboha.',
+    unTitle:'Ha ho motho ya ka arabang mohala wa hao jwale', unBody:'O ka rata ho siya molaetsa ho e na le hoo?', limited:'Ho thibela spam, mehala ho ntlo ena e fokotswe ka dihora tse mmalwa. Ka kopo siya molaetsa.',
+    noAnswer:'Ha ho motho ya arabileng. O ka rata ho siya molaetsa?', declined:'Ha ba a kgona ho araba mohala wa hao.', theySaid:'Ba arabile ba re:',
+    leave:'Siya molaetsa', close:'Kwala', msgTitle:'Siya molaetsa', name:'Lebitso la hao', reason:'O tlile ka eng? (ha ho qobellwe)', phone:'Nomoro ya hao ya selefounu, hore ba o letsetse (ha ho qobellwe)',
+    photo:'Kenya setshwantsho sa hao? Se ba thusa ho tseba hore o mang (ha ho qobellwe)', send:'Romela molaetsa', sent:'E rometswe. Ba tla o araba.', needName:'Ka kopo ngola lebitso la hao.',
+    salesText:'O batla Gate Call lapeng la hao?', salesBody:'Baeti ba ka o fihlella ba le hekeng ntle le ho bona nomoro ya hao.', salesBtn:'Odara mona', soon:'Ho odara ho tla bulwa haufinyane.', back:'Morao',
+    notSet:'Poleiti ena ha e so lokiswe', notSetBody:'Mong’a yona ha a so e bule. Ka kopo kokota kapa o leke hape hamorao.', recNow:'Mohala ona o a rekotwa jwale.',
+    oops:'Ho na le se sa tsamaeang hantle. Hlahloba inthanete mme o leke hape.', again:'Leka hape',
+    privacy:'Re boloka nomoro e sa reriwang ya sesebediswa, aterese ya hao ya IP le mofuta wa sebatli ho thibela tshebediso e mpe. Ha o siya molaetsa, re arolelana lebitso la hao, lebaka le nomoro kapa setshwantsho seo o se kenyang le lelapa leo o le etetseng.' }
+};
+
+/* ================= STATE ================= */
+var qs = new URLSearchParams(location.search);
+var PLATE = (qs.get('id') || '').toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+var L = pickLang();
+function pickLang() {
+  try { var s = localStorage.getItem('gc_lang'); if (s && T[s]) return s; } catch (e) {}
+  var n = (navigator.languages || [navigator.language || 'en']).map(function (x) { return String(x).slice(0, 2).toLowerCase(); });
+  for (var i = 0; i < n.length; i++) { if (T[n[i]]) return n[i]; if (n[i] === 'so') return 'st'; }
+  return 'en';
+}
+function t(k) { return T[L][k] || T.en[k]; }
+function callerId() {
+  try { var k = localStorage.getItem('gc_caller'); if (!k) { k = (crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36).slice(2) + Date.now().toString(36))); localStorage.setItem('gc_caller', k); } return k; }
+  catch (e) { if (!window.__cid) window.__cid = 'anon' + Math.random().toString(36).slice(2) + Date.now().toString(36); return window.__cid; }
+}
+function api(action, body) {
+  body = body || {}; body.action = action; body.callerId = callerId(); body.plate = PLATE;
+  return fetch(SUPABASE_URL + '/functions/v1/visit', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY }, body: JSON.stringify(body) })
+    .then(function (r) { return r.json(); });
+}
+
+/* ================= PAGE ================= */
+var app = document.getElementById('app');
+var timers = [], room = null, visit = null, screen = home, recordingOn = false;
+function stop() { timers.forEach(function (x) { clearInterval(x); clearTimeout(x); }); timers = []; }
+function every(ms, f) { var x = setInterval(f, ms); timers.push(x); return x; }
+function after(ms, f) { var x = setTimeout(f, ms); timers.push(x); return x; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function langPicker() {
+  return '<select id="lang" aria-label="Language">' + Object.keys(T).map(function (k) { return '<option value="' + k + '"' + (k === L ? ' selected' : '') + '>' + T[k].lang + '</option>'; }).join('') + '</select>';
+}
+function el(html, s) {
+  if (s) screen = s;
+  document.documentElement.lang = L === 'st' ? 'st' : L;
+  app.innerHTML = '<div class="top"><div class="brand">Gate Call</div>' + langPicker() + '</div>' + html;
+  document.getElementById('foot').textContent = t('privacy');
+  document.getElementById('lang').onchange = function (e) { L = e.target.value; try { localStorage.setItem('gc_lang', L); } catch (x) {} redraw(); };
+  var h = app.querySelector('h1'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
+}
+var redraw = function () { screen(); };
+function $(id) { return document.getElementById(id); }
+
+function hangupRoom() { if (room) { try { room.disconnect(); } catch (e) {} room = null; } $('audio').innerHTML = ''; }
+
+function home() {
+  stop(); hangupRoom(); visit = null;
+  if (!PLATE) return el('<h1>' + t('notSet') + '</h1><p>' + t('notSetBody') + '</p>', home);
+  el('<h1>' + t('callTitle') + '</h1><p>' + t('callBody') + '</p><button id="call">' + t('callBtn') + '</button><p>' + t('someRec') + '</p>', home);
+  $('call').onclick = start;
+}
+
+function problem() { stop(); hangupRoom(); el('<h1>' + t('oops') + '</h1><button id="again">' + t('again') + '</button>', problem); $('again').onclick = home; }
+
+function ringing() {
+  el('<h1>' + t('calling') + '</h1><div class="pulse" aria-hidden="true"></div><p style="text-align:center">' + t('waiting') + '</p><p style="text-align:center">' + t('mic') + '</p><button class="red" id="cancel">' + t('cancel') + '</button>', ringing);
+  $('cancel').onclick = function () { var v = visit; stop(); hangupRoom(); if (v) api('end', { visitId: v.visitId, reason: 'cancel' }); home(); };
+}
+
+function start() {
+  stop(); ringing();
+  // Unlock audio on this tap (phones only play sound after a tap).
+  var unlock = new (window.AudioContext || window.webkitAudioContext)(); unlock.resume && unlock.resume();
+  api('call').then(function (r) {
+    if (screen !== ringing) return;                        // visitor cancelled meanwhile
+    if (r.state === 'notset') return el('<h1>' + t('notSet') + '</h1><p>' + t('notSetBody') + '</p>', home);
+    if (r.state === 'blocked' || r.state === 'unavailable') return unavailable(r.state !== 'blocked', t('unBody'), r.visitId);
+    if (r.state === 'limited') return unavailable(true, t('limited'));
+    if (r.state !== 'ring') return problem();
+    visit = r; recordingOn = !!r.recording;
+    connect(r).catch(function () {});                     // join early so the call starts the moment they answer
+    var waited = 0;
+    every(1500, function () {
+      waited += 1.5;
+      if (r.escalateAfter && waited >= r.escalateAfter && !r._esc) { r._esc = true; api('escalate', { visitId: r.visitId }); }
+      if (waited >= r.ringFor) { stop(); api('end', { visitId: r.visitId, reason: 'noanswer' }); hangupRoom(); return unavailable(true, t('noAnswer'), r.visitId); }
+      api('status', { visitId: r.visitId }).then(function (s) {
+        if (screen !== ringing) return;
+        if (s.status === 'answered') return live(r);
+        if (s.status === 'declined') { stop(); hangupRoom(); return declined(s.reply, r.visitId); }
+        if (s.status === 'missed') { stop(); hangupRoom(); return unavailable(true, t('noAnswer'), r.visitId); }
+      }).catch(function () {});
+    });
+  }).catch(problem);
+}
+
+function connect(r) {
+  if (!window.LivekitClient || !r.url || !r.token) return Promise.reject();
+  var LK = window.LivekitClient;
+  room = new LK.Room({ adaptiveStream: false, dynacast: false });
+  room.on(LK.RoomEvent.TrackSubscribed, function (track) {
+    if (track.kind === 'audio') { var a = track.attach(); a.autoplay = true; $('audio').appendChild(a); }
+  });
+  room.on(LK.RoomEvent.ParticipantDisconnected, function () { if (screen === live) ended(); });
+  return room.connect(r.url, r.token).then(function () { return room.localParticipant.setMicrophoneEnabled(true); }).then(function () { return room.startAudio(); });
+}
+
+function live(r) {
+  stop();
+  var left = r.callLen || 0, up = 0;
+  el('<h1>' + t('connected') + '</h1>' + (recordingOn ? '<p class="rec">● ' + t('recNow') + '</p>' : '') +
+     '<div class="timer" id="clock"></div><p style="text-align:center">' + t('speak') + '</p><button class="red" id="hang">' + t('hang') + '</button>', live);
+  if (room) room.startAudio().catch(function () {});
+  function draw() { var s = left ? Math.max(0, left - up) : up; $('clock').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  draw();
+  every(1000, function () { up++; draw(); if (left && up >= left) ended(); });
+  $('hang').onclick = ended;
+}
+
+function ended() {
+  var v = visit; stop(); hangupRoom();
+  if (v) api('end', { visitId: v.visitId, reason: 'hangup' });
+  el('<h1>' + t('ended') + '</h1><p>' + t('thanks') + '</p>' + salesBanner() + '<button class="ghost" id="again">' + t('back') + '</button>', ended);
+  wireSales(); $('again').onclick = home;
+}
+
+function declined(reply, visitId) {
+  el('<h1>' + t('declined') + '</h1>' + (reply ? '<p>' + t('theySaid') + '</p><p class="reply">“' + esc(reply) + '”</p>' : '') +
+     '<button id="leave">' + t('leave') + '</button><button class="ghost" id="done">' + t('close') + '</button>', function () { declined(reply, visitId); });
+  $('leave').onclick = function () { form(visitId); }; $('done').onclick = home;
+}
+
+function unavailable(canMessage, body, visitId) {
+  stop(); hangupRoom();
+  el('<h1>' + t('unTitle') + '</h1><p>' + esc(body || t('unBody')) + '</p>' +
+     (canMessage ? '<button id="leave">' + t('leave') + '</button>' : '') + '<button class="ghost" id="done">' + t('close') + '</button>', function () { unavailable(canMessage, body, visitId); });
+  if (canMessage) $('leave').onclick = function () { form(visitId); };
+  $('done').onclick = home;
+}
+
+function shrink(file) {   // photo -> small JPEG data URL (max 640 px), so it uploads fast on mobile data
+  return new Promise(function (res) {
+    if (!file) return res(null);
+    var img = new Image(), url = URL.createObjectURL(file);
+    img.onload = function () {
+      var s = Math.min(1, 640 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      res(c.toDataURL('image/jpeg', 0.72));
+    };
+    img.onerror = function () { res(null); };
+    img.src = url;
+  });
+}
+
+function form(visitId) {
+  stop();
+  el('<h1>' + t('msgTitle') + '</h1><form class="card" id="f" novalidate>' +
+    '<label>' + t('name') + '<input type="text" id="name" maxlength="60" autocomplete="name" required></label>' +
+    '<label>' + t('reason') + '<textarea id="reason" maxlength="300"></textarea></label>' +
+    '<label>' + t('phone') + '<input type="tel" id="phone" inputmode="tel" autocomplete="tel" maxlength="20"></label>' +
+    '<label>' + t('photo') + '<input type="file" id="photo" accept="image/*" capture="user"></label>' +
+    '<p class="err" id="err" hidden></p><button type="submit" id="send">' + t('send') + '</button></form>', function () { form(visitId); });
+  $('f').onsubmit = function (e) {
+    e.preventDefault();
+    var name = $('name').value.trim(), err = $('err');
+    if (!name) { err.textContent = t('needName'); err.hidden = false; $('name').focus(); return; }
+    $('send').disabled = true;
+    shrink($('photo').files[0]).then(function (photo) {
+      return api('message', { visitId: visitId || null, name: name, reason: $('reason').value.trim(), phone: $('phone').value.trim(), photo: photo });
+    }).then(function (r) {
+      if (!r || r.error) { err.textContent = t('oops'); err.hidden = false; $('send').disabled = false; return; }
+      el('<h1>' + t('sent') + '</h1>' + salesBanner() + '<button class="ghost" id="back">' + t('back') + '</button>', home);
+      wireSales(); $('back').onclick = home;
+    }).catch(function () { err.textContent = t('oops'); err.hidden = false; $('send').disabled = false; });
+  };
+}
+
+function salesBanner() {
+  return '<div class="card sales"><b>' + t('salesText') + '</b><p>' + t('salesBody') + '</p><button class="ghost" id="order">' + t('salesBtn') + '</button><p class="err" id="ordermsg" hidden>' + t('soon') + '</p></div>';
+}
+function wireSales() {
+  var b = $('order'); if (!b) return;
+  b.onclick = function () { if (SALES_URL) window.open(SALES_URL, '_blank', 'noopener'); else $('ordermsg').hidden = false; };
+}
+
+window.addEventListener('pagehide', function () { if (visit && screen === ringing) navigator.sendBeacon && api('end', { visitId: visit.visitId, reason: 'cancel' }); });
+
+callerId();
+if (!PLATE) home();
+else api('open').then(function (r) {
+  if (r.state === 'notset') return el('<h1>' + t('notSet') + '</h1><p>' + t('notSetBody') + '</p>', home);
+  if (r.state === 'blocked') return unavailable(false);
+  home();
+}).catch(home);
+</script>
+</body>
+</html>
