@@ -55,6 +55,7 @@ var SALES_URL = '';   // order page, once it exists. NO plate or referral code i
 var T = {
   en: { lang:'English', callTitle:'Call the house', callBody:'The people here will hear your call on their phone. They will not see your number.', callBtn:'Call the house',
     someRec:'Some calls may be recorded.', calling:'Calling…', waiting:'Waiting for someone to answer.', mic:'Please allow the microphone so they can hear you.', cancel:'Cancel',
+    micAsk:'Please allow the microphone so the owner can hear you, then tap Call again.', soundOn:'Tap here if you cannot hear', micOff:'Your microphone is off, so the owner cannot hear you. Allow it in your browser settings.',
     connected:'Connected', speak:'Speak now. This call is short on purpose.', hang:'Hang up', ended:'Call ended', thanks:'Thank you.',
     unTitle:'Nobody can take your call right now', unBody:'Would you like to leave a message instead?', limited:'To avoid spam, calls to this house are limited for a few hours. Please leave a message instead.',
     noAnswer:'Nobody answered. Would you like to leave a message?', declined:'They could not take your call.', theySaid:'They replied:',
@@ -168,7 +169,18 @@ function ringing() {
   $('cancel').onclick = function () { var v = visit; stop(); hangupRoom(); if (v) api('end', { visitId: v.visitId, reason: 'cancel' }); home(); };
 }
 
+// Ask for the microphone on the tap itself (phones only show the prompt reliably then). Without it the owner hears nothing.
+var micOk = false;
 function start() {
+  if (micOk || !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) return startCall();
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(function (st) {
+    st.getTracks().forEach(function (x) { x.stop(); }); micOk = true; startCall();
+  }).catch(function () {
+    el('<h1>' + t('callTitle') + '</h1><p class="rec">' + t('micAsk') + '</p><button id="call">' + t('callBtn') + '</button>', home);
+    $('call').onclick = start;
+  });
+}
+function startCall() {
   stop(); ringing();
   // Unlock audio on this tap (phones only play sound after a tap).
   var unlock = new (window.AudioContext || window.webkitAudioContext)(); unlock.resume && unlock.resume();
@@ -200,10 +212,21 @@ function connect(r) {
   var LK = window.LivekitClient;
   room = new LK.Room({ adaptiveStream: false, dynacast: false });
   room.on(LK.RoomEvent.TrackSubscribed, function (track) {
-    if (track.kind === 'audio') { var a = track.attach(); a.autoplay = true; $('audio').appendChild(a); }
+    if (track.kind === 'audio') { var a = track.attach(); a.autoplay = true; a.playsInline = true; $('audio').appendChild(a); var p = a.play && a.play(); if (p && p.catch) p.catch(soundButton); }
   });
+  room.on(LK.RoomEvent.AudioPlaybackStatusChanged, function () { if (room && !room.canPlaybackAudio) soundButton(); });
   room.on(LK.RoomEvent.ParticipantDisconnected, function () { if (screen === live) ended(); });
-  return room.connect(r.url, r.token).then(function () { return room.localParticipant.setMicrophoneEnabled(true); }).then(function () { return room.startAudio(); });
+  joined = room.connect(r.url, r.token).then(function () { return room.localParticipant.setMicrophoneEnabled(true); })
+    .then(function () { micLive = true; return room.startAudio(); }, function (e) { micLive = false; throw e; });
+  return joined;
+}
+var joined = null, micLive = false;
+// Phones sometimes block sound until another tap: show a button that turns it on.
+function soundButton() {
+  if (screen !== live || $('sound')) return;
+  var b = document.createElement('button'); b.id = 'sound'; b.className = 'ghost'; b.textContent = t('soundOn');
+  b.onclick = function () { if (room) room.startAudio().catch(function () {}); [].forEach.call($('audio').querySelectorAll('audio'), function (a) { a.play && a.play().catch(function () {}); }); b.remove(); };
+  var h = $('hang'); h.parentNode.insertBefore(b, h);
 }
 
 function live(r) {
@@ -212,6 +235,11 @@ function live(r) {
   el('<h1>' + t('connected') + '</h1>' + (recordingOn ? '<p class="rec">● ' + t('recNow') + '</p>' : '') +
      '<div class="timer" id="clock"></div><p style="text-align:center">' + t('speak') + '</p><button class="red" id="hang">' + t('hang') + '</button>', live);
   if (room) room.startAudio().catch(function () {});
+  // If joining early failed (weak signal), try again now; if the microphone is still off, say so.
+  (joined || Promise.reject()).catch(function () { hangupRoom(); return connect(r); }).catch(function () {}).then(function () {
+    if (screen === live && !micLive) { var p = document.createElement('p'); p.className = 'rec'; p.textContent = t('micOff'); $('hang').parentNode.insertBefore(p, $('hang')); }
+    if (room && !room.canPlaybackAudio) soundButton();
+  });
   function draw() { var s = left ? Math.max(0, left - up) : up; $('clock').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
   draw();
   every(1000, function () { up++; draw(); if (left && up >= left) ended(); });
