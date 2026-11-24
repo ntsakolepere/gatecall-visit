@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f2420">
+<title>Order Gate Call</title>
+<meta name="description" content="A gate sign with a QR code. Visitors scan it and call your phone, wherever you are, without seeing your number.">
+<style>
+  :root { --bg:#0f2420; --card:#173630; --line:#24493f; --ink:#eef3ee; --mut:#9bb0a8; --gold:#e7b96a; --goldink:#1b1405; --red:#e5645b; --green:#5cc08a; }
+  * { box-sizing:border-box; min-width:0; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font-family:system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width:520px; margin:0 auto; padding:calc(16px + env(safe-area-inset-top)) 20px 28px; display:flex; flex-direction:column; gap:16px; }
+  .top { display:flex; align-items:center; justify-content:space-between; }
+  .brand { color:var(--gold); font-weight:800; font-size:20px; letter-spacing:.5px; }
+  .steps { color:var(--mut); font-size:13px; }
+  h1 { font-size:30px; line-height:1.15; margin:4px 0 0; text-wrap:balance; }
+  h2 { font-size:20px; margin:6px 0 0; }
+  p { color:var(--mut); line-height:1.5; margin:0; font-size:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .pick { cursor:pointer; text-align:left; font:inherit; color:inherit; width:100%; }
+  .pick.on { border-color:var(--gold); box-shadow:0 0 0 1px var(--gold) inset; }
+  .pick b { font-size:17px; }
+  .price { color:var(--gold); font-weight:800; }
+  ul { margin:0; padding-left:18px; color:var(--mut); line-height:1.5; }
+  .how { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+  .how div { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px; font-size:13.5px; color:var(--mut); line-height:1.4; }
+  .how b { display:block; color:var(--gold); font-size:22px; }
+  .designs { display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:6px; }
+  .designs button { flex:0 0 78%; scroll-snap-align:start; }
+  .designs img, .sign { width:100%; border-radius:12px; background:#0b1a17; display:block; aspect-ratio:3/2; object-fit:contain; }
+  button.btn { font:inherit; font-weight:800; font-size:18px; border:0; border-radius:14px; padding:16px; cursor:pointer; background:var(--gold); color:var(--goldink); width:100%; }
+  button.ghost { font:inherit; background:transparent; color:var(--ink); border:1px solid var(--line); border-radius:14px; padding:14px; font-weight:700; font-size:16px; width:100%; cursor:pointer; }
+  button[disabled] { opacity:.55; cursor:default; }
+  label { display:flex; flex-direction:column; gap:6px; color:var(--mut); font-size:14px; }
+  input, textarea, select { font:inherit; font-size:16px; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:13px; width:100%; }
+  textarea { min-height:70px; resize:vertical; }
+  input:focus, textarea:focus, select:focus, button:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+  .row { display:flex; justify-content:space-between; gap:10px; }
+  .err { color:var(--red); font-size:14px; }
+  .ok { color:var(--green); font-weight:700; }
+  .small { font-size:13px; color:var(--mut); }
+  footer { max-width:520px; margin:0 auto; padding:0 20px calc(20px + env(safe-area-inset-bottom)); color:var(--mut); font-size:12px; line-height:1.5; }
+  [hidden] { display:none !important; }
+  @media (prefers-reduced-motion:no-preference) { main > * { animation:in .25s ease-out; } @keyframes in { from { opacity:0; transform:translateY(6px); } } }
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite"><p>Loading…</p></main>
+<footer>Gate Call is a service of Redbear Group (Pty) Ltd. Your details are used only to make, deliver and set up your gate sign, and to contact you about your order.</footer>
+<script>
+{
+var SUPABASE_URL = 'https://jcksphuqrrwitmmmgzov.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_KdYI50_eGRfM2AUhcA5CfA_bBrOB_B7';   // public key: safe to show
+var Q = new URLSearchParams(location.search);
+var FROM = Q.get('from') === 'banner' ? 'banner' : 'website';
+
+var KINDS = {
+  home:       { title:'Home', head:'For your home', blurb:'One sign for your gate. Visitors scan it and call you, and never see your number.', perUnit:false,
+                pts:['Never miss a delivery or a visitor at the gate','Answer from anywhere: work, holiday, the back garden','Your number stays private'] },
+  business:   { title:'Business', head:'For your business', blurb:'Your logo and name on the sign. Customers scan and call the business.', perUnit:false,
+                pts:['Customers reach you even when the gate is closed','Your logo and trading name on the sign','No receptionist needed at the gate'] },
+  complex:    { title:'Complex', head:'Complexes, townhouses and flats', blurb:'One long sign with a QR code for every unit. Visitors scan the unit they are visiting.', perUnit:true, unit:'unit',
+                pts:['Every unit answers on their own phone','No guard phoning each unit','Billed to each owner or the body corporate'] },
+  officepark: { title:'Office park', head:'Office parks', blurb:'One bigger sign listing every company, each with its own QR code.', perUnit:true, unit:'company',
+                pts:['Visitors scan the company they are here to see','Less work for reception and security','Change companies as tenants come and go'] }
+};
+var DESIGNS = {
+  home: ['Ndlovu House','The Mokoena Family','Dlamini Home','Van Wyk Residence','Number 31'],
+  business: ['Steel with logo','Black with logo','Brass with logo','Steel, workshop style','Black, office style'],
+  complex: ['4 units in a row, steel','6 units with names, black','8 units, brass','3 units, steel','6 units in one line, black'],
+  officepark: ['6 companies, steel','4 companies, black','8 companies, brass','6 companies in one line, steel','5 companies, black']
+};
+var info = { home:0, business:0, complex:0, officepark:0, install:0, monthly:{ home:49, business:99, complex:49, officepark:67 }, trialDays:7 };
+var o = { kind:'home', design:0, units:4, companies:'', name:'', address:'', suburb:'', phone:'', email:'', message:'', install:true, who:'' };
+try { var saved = JSON.parse(sessionStorage.getItem('gc_order') || 'null'); if (saved) o = Object.assign(o, saved); } catch (e) {}
+function keep() { try { sessionStorage.setItem('gc_order', JSON.stringify(o)); } catch (e) {} }
+
+var $ = function (id) { return document.getElementById(id); };
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+function R(n) { n = Number(n || 0); return 'R' + (n % 1 ? n.toFixed(2) : n.toLocaleString('en-ZA')); }
+function rpc(fn, args) {
+  return fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, { method:'POST', headers:{ 'Content-Type':'application/json', apikey:SUPABASE_KEY }, body:JSON.stringify(args || {}) })
+    .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.message || 'error'); return j; }); });
+}
+function pay(action, ref) {
+  return fetch(SUPABASE_URL + '/functions/v1/pay', { method:'POST', headers:{ 'Content-Type':'application/json', apikey:SUPABASE_KEY }, body:JSON.stringify({ action:action, ref:ref }) }).then(function (r) { return r.json(); });
+}
+function units() { return o.kind === 'complex' ? Math.max(1, +o.units || 1) : o.kind === 'officepark' ? Math.max(1, companyList().length) : 1; }
+function companyList() { return o.companies.split('\n').map(function (s) { return s.trim(); }).filter(Boolean); }
+function monthly() { return (info.monthly[o.kind] || 0) * (KINDS[o.kind].perUnit ? units() : 1); }
+function signPrice() { return (info[o.kind] || 0) * (KINDS[o.kind].perUnit ? units() : 1) + (o.install ? (info.install || 0) : 0); }
+function img(kind, i) { return 'img/' + kind + '-' + (i + 1) + '.webp'; }
+function show(html, step) {
+  $('app').innerHTML = '<div class="top"><div class="brand">Gate Call</div>' + (step ? '<div class="steps">Step ' + step + ' of 3</div>' : '') + '</div>' + html;
+  window.scrollTo(0, 0);
+}
+
+/* ---------- 1. What it is + choose the kind ---------- */
+function start() {
+  show('<h1>Never miss a visitor at your gate</h1><p>A gate sign with a QR code. Visitors scan it and your phone rings through the Gate Call app, wherever you are. They never see your number.</p>' +
+    '<div class="how"><div><b>1</b>Visitor scans your gate sign</div><div><b>2</b>Your phone rings in the Gate Call app</div><div><b>3</b>Talk, or they leave a message</div></div>' +
+    '<h2>What is it for?</h2>' +
+    Object.keys(KINDS).map(function (k) { var x = KINDS[k];
+      return '<button class="card pick' + (o.kind === k ? ' on' : '') + '" data-k="' + k + '"><b>' + x.head + '</b><p>' + x.blurb + '</p><ul>' + x.pts.map(function (p) { return '<li>' + p + '</li>'; }).join('') + '</ul>' +
+        '<span class="price">' + R(info.monthly[k]) + ' per month' + (x.perUnit ? ' per ' + x.unit : '') + (info.trialDays ? ', first ' + info.trialDays + ' days free' : '') + '</span></button>';
+    }).join(''));
+  [].forEach.call(document.querySelectorAll('[data-k]'), function (b) { b.onclick = function () { if (o.kind !== b.dataset.k) o.design = 0; o.kind = b.dataset.k; keep(); designs(); }; });
+}
+
+/* ---------- 2. Choose a design ---------- */
+function designs() {
+  show('<h1>Choose a design</h1><p>Swipe to see them all. Your sign carries your own name, address and details.</p>' +
+    '<div class="designs" id="ds">' + DESIGNS[o.kind].map(function (n, i) {
+      return '<button class="card pick' + (o.design === i ? ' on' : '') + '" data-d="' + i + '"><img src="' + img(o.kind, i) + '" alt="' + esc(n) + ' design" loading="lazy"><b>' + esc(n) + '</b></button>';
+    }).join('') + '</div>' +
+    '<button class="btn" id="next">Use this design</button><button class="ghost" id="back">Back</button>', 1);
+  [].forEach.call(document.querySelectorAll('[data-d]'), function (b) { b.onclick = function () { o.design = +b.dataset.d; keep(); [].forEach.call(document.querySelectorAll('[data-d]'), function (x) { x.classList.toggle('on', x === b); }); }; });
+  var sel = document.querySelector('[data-d="' + o.design + '"]'); if (sel) sel.scrollIntoView({ block:'nearest', inline:'start' });
+  $('next').onclick = details; $('back').onclick = start;
+}
+
+/* ---------- 3. Details ---------- */
+function details() {
+  var k = o.kind, nameLabel = { home:'Family or house name on the sign', business:'Business name on the sign', complex:'Complex name', officepark:'Office park name' }[k];
+  show('<h1>Your details</h1>' +
+    '<label>' + nameLabel + '<input id="name" value="' + esc(o.name) + '" maxlength="80" placeholder="' + { home:'Ndlovu House', business:'Mabaso Plumbing', complex:'Jacaranda Gardens', officepark:'Kingfisher Office Park' }[k] + '"></label>' +
+    (k === 'complex' ? '<label>How many units?<input id="units" type="number" min="1" max="200" inputmode="numeric" value="' + esc(o.units) + '"></label>' : '') +
+    (k === 'officepark' ? '<label>Companies (one per line)<textarea id="companies" placeholder="Acme Logistics\nBright Dental">' + esc(o.companies) + '</textarea></label>' : '') +
+    (k === 'home' ? '<label>Message on the sign (optional)<input id="message" value="' + esc(o.message) + '" maxlength="60" placeholder="Beware of the dog"></label>' : '') +
+    (k === 'business' ? '<label>Tagline (optional)<input id="message" value="' + esc(o.message) + '" maxlength="60" placeholder="Plumbing and gas since 2005"></label><p class="small">We ask for your logo by WhatsApp or email after you order.</p>' : '') +
+    '<label>Street address<input id="address" value="' + esc(o.address) + '" maxlength="200" autocomplete="street-address" placeholder="14 Kestrel Street"></label>' +
+    '<label>Suburb<input id="suburb" value="' + esc(o.suburb) + '" maxlength="80" autocomplete="address-level3" placeholder="Lenasia South"></label>' +
+    '<label>Your name<input id="who" value="' + esc(o.who) + '" maxlength="80" autocomplete="name" placeholder="Thandi Nkosi"></label>' +
+    '<label>Cellphone number<input id="phone" type="tel" value="' + esc(o.phone) + '" maxlength="15" autocomplete="tel" inputmode="tel" placeholder="082 123 4567"></label>' +
+    '<label>Email (for your invoice, optional)<input id="email" type="email" value="' + esc(o.email) + '" maxlength="120" autocomplete="email" placeholder="thandi@email.com"></label>' +
+    '<label>Delivery<select id="install"><option value="1">We install it at your gate</option><option value="0"' + (o.install ? '' : ' selected') + '>Deliver it, I will fix it myself</option></select></label>' +
+    '<p class="err" id="err" hidden></p><button class="btn" id="next">Review my order</button><button class="ghost" id="back">Back</button>', 2);
+  function read() {
+    ['name','address','suburb','who','phone','email','message','units','companies'].forEach(function (f) { if ($(f)) o[f] = $(f).value; });
+    o.install = $('install').value === '1'; keep();
+  }
+  $('next').onclick = function () {
+    read();
+    var digits = o.phone.replace(/\D/g, ''), e = '';
+    if (o.name.trim().length < 2) e = 'Enter the ' + nameLabel.toLowerCase() + '.';
+    else if (o.address.trim().length < 4) e = 'Enter the street address.';
+    else if (!(digits.length === 10 && digits[0] === '0') && !(digits.length === 11 && digits.indexOf('27') === 0)) e = 'Enter a 10-digit South African cellphone number.';
+    else if (o.email.trim() && !/^\S+@\S+\.\S+$/.test(o.email.trim())) e = 'Check the email address.';
+    else if (o.kind === 'officepark' && !companyList().length) e = 'Add at least one company.';
+    if (e) { $('err').textContent = e; $('err').hidden = false; return; }
+    review();
+  };
+  $('back').onclick = function () { read(); designs(); };
+}
+
+/* ---------- 4. Review and order ---------- */
+function review() {
+  var sp = signPrice(), x = KINDS[o.kind];
+  show('<h1>Review your order</h1>' +
+    '<div class="card"><img class="sign" src="' + img(o.kind, o.design) + '" alt="Your design"><p class="small">Style example. Your sign carries your own details. We send you a picture to approve before we make it.</p></div>' +
+    '<div class="card"><div class="row"><b>' + esc(o.name) + '</b><span>' + x.title + '</span></div>' +
+      '<p>' + esc(o.address) + (o.suburb ? ', ' + esc(o.suburb) : '') + '</p>' +
+      (o.kind === 'complex' ? '<p>' + units() + ' units</p>' : '') + (o.kind === 'officepark' ? '<p>' + esc(companyList().join(', ')) + '</p>' : '') +
+      (o.message ? '<p>“' + esc(o.message) + '”</p>' : '') +
+      '<p>' + (o.install ? 'We install it at your gate' : 'Delivered to you') + ' · ' + esc(o.who || '') + ' ' + esc(o.phone) + '</p></div>' +
+    '<div class="card">' + (sp > 0 ? '<div class="row"><span>Gate sign' + (o.install && info.install ? ' and installation' : '') + '</span><b>' + R(sp) + ' once-off</b></div>' : '') +
+      '<div class="row"><span>Gate Call service</span><b>' + R(monthly()) + ' per month</b></div>' +
+      (info.trialDays ? '<p class="small">The first ' + info.trialDays + ' days of the service are free. Your monthly subscription starts in the Gate Call app after that. Cancel any time.</p>' : '') + '</div>' +
+    '<p class="err" id="err" hidden></p><button class="btn" id="go">' + 'Place my order' + '</button><button class="ghost" id="back">Change details</button>' +
+    '<p class="small">' + (sp > 0 ? 'Next, you finish on PayFast\'s secure page. ' : '') + 'By ordering you agree to the Gate Call terms, which you also accept in the app.</p>', 3);
+  $('back').onclick = details;
+  $('go').onclick = function () {
+    var b = $('go'); b.disabled = true; b.textContent = 'Placing your order…'; $('err').hidden = true;
+    rpc('web_order', { p: { from:FROM, kind:o.kind, design:DESIGNS[o.kind][o.design], units:units(), unitList:o.kind === 'officepark' ? companyList() : [],
+      name:o.who.trim() ? o.who.trim() + ' / ' + o.name.trim() : o.name.trim(), address:o.address, suburb:o.suburb, phone:o.phone, email:o.email.trim(),
+      delivery:o.install ? 'install' : 'collect', message:o.message } })
+    .then(function (r) {
+      if (!r || r.error) throw new Error({ phone:'Check your cellphone number.', details:'Fill in your name and address.', many:'You already placed several orders today. We will contact you.', busy:'We are very busy right now. Please try again in a few minutes.' }[r && r.error] || 'Something went wrong.');
+      try { localStorage.setItem('gc_last_order', JSON.stringify({ ref:r.ref, order:r.order, amount:r.amount })); } catch (e) {}
+      if (r.amount > 0) return pay('start', r.ref).then(function (p) { if (p.url) location.href = p.url; else throw new Error((p.error || 'Payment could not start.') + ' Your order #' + r.order + ' is saved. We will contact you.'); });
+      done(r.order, false);
+    })
+    .catch(function (e) { $('err').textContent = e.message === 'Failed to fetch' ? 'No connection. Check your internet and try again.' : e.message; $('err').hidden = false; b.disabled = false; b.textContent = 'Place my order'; });
+  };
+}
+
+function done(orderNo, paid) {
+  try { sessionStorage.removeItem('gc_order'); } catch (e) {}
+  show('<h1>Thank you!</h1><p class="ok">' + (paid ? 'Payment received. ' : '') + 'Your order' + (orderNo ? ' #' + orderNo : '') + ' is in.</p>' +
+    '<div class="card"><b>What happens next</b><ul><li>We send you a picture of your gate sign to approve.</li><li>We make it, then ' + (o.install ? 'install it at your gate' : 'deliver it to you') + '.</li><li>We help you set up the Gate Call app on your phone, and link your sign.</li></ul></div>' +
+    '<button class="ghost" id="again">Order another gate sign</button>');
+  $('again').onclick = function () { o.name = ''; o.message = ''; start(); };
+}
+
+/* ---------- back from PayFast ---------- */
+function returned(ref, cancelled) {
+  var last = {}; try { last = JSON.parse(localStorage.getItem('gc_last_order') || '{}'); } catch (e) {}
+  var isApp = Q.get('app') === '1';
+  if (cancelled) {
+    show('<h1>Payment not finished</h1><p>Your order is saved, but it is not paid yet.</p><p class="err" id="err" hidden></p><button class="btn" id="retry">Pay now</button>' + (isApp ? '<p>Or go back to the Gate Call app and tap Pay now under My orders.</p>' : ''));
+    $('retry').onclick = function () { pay('start', ref).then(function (p) { if (p.url) location.href = p.url; else { $('err').textContent = p.error || 'Payment could not start.'; $('err').hidden = false; } }); };
+    return;
+  }
+  show('<h1>Checking your payment…</h1><p>This takes a few seconds.</p>');
+  var tries = 0;
+  (function check() {
+    pay('status', ref).then(function (s) {
+      if (s.status === 'paid') return isApp ? show('<h1>Payment received</h1><p class="ok">Thank you. Your gate sign order is paid.</p><p>Go back to the Gate Call app to follow your order.</p>') : done(last.ref === ref ? last.order : null, true);
+      if (++tries < 8) return setTimeout(check, 2500);
+      show('<h1>Thank you</h1><p>We have not received the payment confirmation yet. If you paid, it will show soon and we will contact you about your order.</p>');
+    }).catch(function () { if (++tries < 8) setTimeout(check, 2500); });
+  })();
+}
+
+rpc('order_info').then(function (r) { if (r && r.monthly) info = r; }).catch(function () {}).then(function () {
+  if (Q.get('paid')) returned(Q.get('paid'), false);
+  else if (Q.get('cancelled')) returned(Q.get('cancelled'), true);
+  else start();
+});
+}
+</script>
+</body>
+</html>
