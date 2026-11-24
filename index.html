@@ -43,7 +43,10 @@
 <main id="app" aria-live="polite"></main>
 <footer id="foot"></footer>
 <div id="audio" hidden></div>
-<script src="livekit-client.umd.js"></script>
+<script>
+// The calling library is big (600 KB): load it in the background so the page appears at once on slow mobile data.
+window.lkReady = new Promise(function (ok) { var sc = document.createElement('script'); sc.src = 'livekit-client.umd.js'; sc.async = true; sc.onload = ok; sc.onerror = ok; document.head.appendChild(sc); });
+</script>
 <script>
 /* ================= CONFIG (filled in during setup) ================= */
 var SUPABASE_URL = 'https://jcksphuqrrwitmmmgzov.supabase.co';
@@ -208,7 +211,8 @@ function startCall() {
 }
 
 function connect(r) {
-  if (!window.LivekitClient || !r.url || !r.token) return Promise.reject();
+  if (!r.url || !r.token) return Promise.reject();
+  if (!window.LivekitClient) { joined = window.lkReady.then(function () { if (!window.LivekitClient) throw new Error('no livekit'); return connect(r); }); return joined; }
   var LK = window.LivekitClient;
   room = new LK.Room({ adaptiveStream: false, dynacast: false });
   room.on(LK.RoomEvent.TrackSubscribed, function (track) {
