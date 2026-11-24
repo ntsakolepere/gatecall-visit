@@ -53,7 +53,7 @@
 var SUPABASE_URL = 'https://jcksphuqrrwitmmmgzov.supabase.co';
 var SUPABASE_KEY = 'sb_publishable_KdYI50_eGRfM2AUhcA5CfA_bBrOB_B7';   // public key: safe to show
 var Q = new URLSearchParams(location.search);
-var FROM = Q.get('from') === 'banner' ? 'banner' : 'website';
+var FROM = Q.get('from') === 'banner' ? 'banner' : Q.get('from') === 'plate' ? 'pamphlet' : 'website';   // 'plate' = the order QR on a gate sign
 
 var KINDS = {
   home:       { title:'Home', head:'For your home', blurb:'One sign for your gate. Visitors scan it and call you, and never see your number.', perUnit:false,
