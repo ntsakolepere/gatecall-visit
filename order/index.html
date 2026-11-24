@@ -214,7 +214,8 @@ function returned(ref, cancelled) {
 }
 
 rpc('order_info').then(function (r) { if (r && r.monthly) info = r; }).catch(function () {}).then(function () {
-  if (Q.get('paid')) returned(Q.get('paid'), false);
+  if (Q.get('sub')) show(Q.get('sub') === 'ok' ? '<h1>Card payments set up</h1><p class="ok">Thank you. Your Gate Call subscription is paid by card from now on.</p><p>Go back to the Gate Call app. It can take a minute to show there.</p>' : '<h1>Card not set up</h1><p>Nothing was charged. Go back to the Gate Call app to try again.</p>');
+  else if (Q.get('paid')) returned(Q.get('paid'), false);
   else if (Q.get('cancelled')) returned(Q.get('cancelled'), true);
   else start();
 });
