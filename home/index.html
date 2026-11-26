@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gate Call</title>
+<meta name="description" content="Gate Call for your phone: visitors scan your gate sign and you answer here.">
+<meta name="theme-color" content="#0f2420">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gate Call">
+<style>
+  :root { --bg:#0f2420; --card:#16332d; --card2:#1d3f37; --line:#2b4c44; --ink:#f1f6f2; --mut:#9db3ab; --gold:#f4b942; --goldink:#2a1d05; --green:#3ddc97; --red:#e5645b; --sky:#4fb3c9; --violet:#a78bfa; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  main { max-width:520px; margin:0 auto; padding:calc(16px + env(safe-area-inset-top)) 18px calc(96px + env(safe-area-inset-bottom)); }
+  h1 { font-size:26px; margin:6px 0 4px; } h2 { font-size:17px; margin:22px 0 10px; } p { color:var(--mut); line-height:1.5; margin:6px 0; }
+  .brand { display:flex; align-items:center; gap:10px; } .brand img { width:40px; height:40px; border-radius:11px; } .brand b { font-size:22px; } .brand b span { color:var(--gold); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:20px; padding:16px; margin-top:14px; }
+  button, .btn { display:block; width:100%; border:0; border-radius:16px; padding:15px; font-size:17px; font-weight:800; background:var(--gold); color:var(--goldink); margin-top:12px; cursor:pointer; text-align:center; text-decoration:none; font-family:inherit; }
+  button.ghost { background:transparent; color:var(--ink); border:1px solid var(--line); }
+  button.red { background:var(--red); color:#fff; } button.green { background:var(--green); color:#062015; }
+  button:disabled { opacity:.5; }
+  label { display:block; color:var(--mut); font-size:14px; margin-top:12px; }
+  input { width:100%; margin-top:6px; padding:14px; font-size:18px; border-radius:14px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font-family:inherit; }
+  .err { color:var(--red); } .ok { color:var(--green); }
+  .row { display:flex; align-items:center; gap:12px; } .grow { flex:1; min-width:0; }
+  .status { border-radius:24px; padding:18px; background:linear-gradient(135deg,#145c46,#0e3a2e); }
+  .status.off { background:linear-gradient(135deg,#7a3a2c,#3b1d17); }
+  .dot { width:54px; height:54px; border-radius:27px; background:rgba(255,255,255,.14); display:flex; align-items:center; justify-content:center; font-size:26px; flex:none; }
+  .switch { position:relative; width:54px; height:32px; flex:none; } .switch input { display:none; }
+  .switch i { position:absolute; inset:0; border-radius:16px; background:rgba(255,255,255,.3); transition:.2s; }
+  .switch i:after { content:''; position:absolute; top:3px; left:3px; width:26px; height:26px; border-radius:13px; background:#fff; transition:.2s; }
+  .switch input:checked + i { background:var(--green); } .switch input:checked + i:after { left:25px; }
+  .warn { background:rgba(244,185,66,.12); border:1px solid var(--gold); border-radius:16px; padding:12px 14px; margin-top:14px; }
+  .visit { display:flex; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); } .visit:last-child { border:0; }
+  .ic { width:42px; height:42px; border-radius:21px; display:flex; align-items:center; justify-content:center; flex:none; font-size:19px; }
+  .small { font-size:13px; } .tag { font-size:12px; font-weight:800; text-transform:capitalize; }
+  nav { position:fixed; left:0; right:0; bottom:0; display:flex; background:#0b1c18; border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom); }
+  nav a { flex:1; text-align:center; padding:10px 0 12px; color:var(--mut); text-decoration:none; font-size:12px; font-weight:700; } nav a b { display:block; font-size:21px; } nav a.on { color:var(--gold); }
+  #call { position:fixed; inset:0; background:radial-gradient(circle at 50% 30%,#1f5a49,#0b1c18 70%); display:none; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center; z-index:9; }
+  #call.show { display:flex; }
+  #call .ring { width:120px; height:120px; border-radius:60px; background:rgba(61,220,151,.18); display:flex; align-items:center; justify-content:center; font-size:54px; animation:pulse 1.2s infinite; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(61,220,151,.5)} 100%{box-shadow:0 0 0 34px rgba(61,220,151,0)} }
+  #call video { width:100%; max-width:420px; border-radius:18px; background:#000; margin-top:16px; }
+  #call .btns { width:100%; max-width:420px; } .quick button { font-size:15px; padding:12px; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<main id="app"><p>Loading…</p></main>
+<nav id="nav" hidden>
+  <a href="#home" data-t="home"><b>🏠</b>Home</a>
+  <a href="#visitors" data-t="visitors"><b>🕒</b>Visitors</a>
+  <a href="#more" data-t="more"><b>⚙️</b>More</a>
+</nav>
+<div id="call"></div>
+<div id="audio" hidden></div>
+
+<script src="supabase.js"></script>
+<script>
+var SUPABASE_URL = 'https://jcksphuqrrwitmmmgzov.supabase.co', SUPABASE_KEY = 'sb_publishable_KdYI50_eGRfM2AUhcA5CfA_bBrOB_B7';
+var VAPID = 'BMyvLwmY-sJVYiWhHBYTduCS4xMibuVe8e-KWKeQ1InHkxZMtex4yesdg4oca_mQMF8cdMxsdYsSado4J1Xt3aY';
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'gc-home' } });
+var lk = new Promise(function (ok) { var s = document.createElement('script'); s.src = '../livekit-client.umd.js'; s.onload = ok; s.onerror = ok; document.head.appendChild(s); });
+var A = null, visits = [], tab = 'home', pendingPlate = null, phone = null, sentTo = null;
+var params = new URLSearchParams(location.search);
+var $ = function (id) { return document.getElementById(id); };
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+var standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+var iOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+var canPush = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
+function el(html) { $('app').innerHTML = html; window.scrollTo(0, 0); }
+async function session() {
+  var s = (await sb.auth.getSession()).data.session;
+  if (s) return s;
+  var r = await sb.auth.signInAnonymously(); if (r.error) throw r.error; return r.data.session;
+}
+async function rpc(fn, args) { var r = await sb.rpc(fn, args || {}); if (r.error) throw new Error(r.error.message); return r.data; }
+async function fn(name, body) {
+  var s = await session();
+  var r = await fetch(SUPABASE_URL + '/functions/v1/' + name, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + s.access_token }, body: JSON.stringify(body) });
+  var j = await r.json().catch(function () { return {}; });
+  if (!r.ok && !j.error) j.error = 'Server error ' + r.status;
+  return j;
+}
+function normPhone(v) { var d = String(v || '').replace(/\D/g, ''); if (d.length === 10 && d[0] === '0') return '+27' + d.slice(1); if (d.length === 11 && d.slice(0, 2) === '27') return '+' + d; return null; }
+function showPhone(p) { return String(p || '').replace(/^\+27/, '0').replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3'); }
+function ago(t) { var s = (Date.now() - new Date(t).getTime()) / 1000; if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + ' min ago'; if (s < 86400) return Math.floor(s / 3600) + ' h ago'; return new Date(t).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }) + ', ' + new Date(t).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' }); }
+
+/* ---------------- start ---------------- */
+async function start() {
+  if (params.get('plate')) { pendingPlate = params.get('plate').toUpperCase(); try { localStorage.setItem('gc-plate', pendingPlate); } catch (e) {} }
+  else { try { pendingPlate = localStorage.getItem('gc-plate'); } catch (e) {} }
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+  try { await session(); A = await rpc('my_account'); } catch (e) { A = null; }
+  if (!A) return signIn();
+  enter();
+}
+function enter() {
+  $('nav').hidden = false;
+  listen(); beat(); setInterval(beat, 40000);
+  loadVisits();
+  var c = params.get('call'); if (c) { history.replaceState(null, '', location.pathname); checkCall(c); }
+  if (pendingPlate && !A.gates.some(function (g) { return g.plateId === pendingPlate; })) return linkSign();
+  route();
+}
+window.addEventListener('hashchange', route);
+function route() { if (!A) return; tab = (location.hash || '#home').slice(1); document.querySelectorAll('nav a').forEach(function (a) { a.className = a.dataset.t === tab ? 'on' : ''; });
+  if (tab === 'visitors') return visitorsTab(); if (tab === 'more') return moreTab(); if (tab === 'link') return linkSign(); if (tab === 'pay') return payTab(); homeTab(); }
+
+/* ---------------- sign in ---------------- */
+function signIn() {
+  $('nav').hidden = true;
+  el('<div class="brand"><img src="icon-192.png" alt=""><b>Gate <span>Call</span></b></div>' +
+    '<h1>Welcome</h1><p>Visitors scan the sign on your gate and you answer here, wherever you are.</p>' +
+    (iOS && !standalone ? '<div class="warn"><b>iPhone: add Gate Call to your Home Screen first</b><p class="small">Tap the Share button <b>⎋</b> at the bottom of Safari, then <b>Add to Home Screen</b>. Open Gate Call from your Home Screen, so calls can ring your phone.</p></div>' : '') +
+    '<div class="card"><label>Your cellphone number<input id="ph" type="tel" inputmode="tel" autocomplete="tel" placeholder="082 123 4567"></label>' +
+    '<label style="display:flex;gap:10px;align-items:flex-start;color:var(--ink)"><input id="ag" type="checkbox" style="width:22px;height:22px;margin:2px 0 0"> <span>I agree to the <a href="../terms.html" target="_blank" style="color:var(--gold)">Terms</a> and <a href="../privacy.html" target="_blank" style="color:var(--gold)">Privacy Policy</a>.</span></label>' +
+    '<p class="err" id="e" hidden></p><button id="go">Send me a code</button></div>');
+  $('go').onclick = async function () {
+    var p = normPhone($('ph').value), e = $('e'); e.hidden = true;
+    if (!p) { e.textContent = 'Type your cellphone number, for example 082 123 4567.'; e.hidden = false; return; }
+    if (!$('ag').checked) { e.textContent = 'Please tick that you agree to the Terms.'; e.hidden = false; return; }
+    this.disabled = true; this.textContent = 'Sending…';
+    var r = await fn('otp', { phone: p }).catch(function () { return { error: 'No internet connection.' }; });
+    if (!r.ok) { e.textContent = r.error || 'Could not send the code.'; e.hidden = false; this.disabled = false; this.textContent = 'Send me a code'; return; }
+    phone = p; codeStep();
+  };
+}
+function codeStep() {
+  el('<div class="brand"><img src="icon-192.png" alt=""><b>Gate <span>Call</span></b></div><h1>Enter the code</h1><p>We sent a 6-digit code by SMS to ' + esc(showPhone(phone)) + '.</p>' +
+    '<div class="card"><label>Code<input id="c" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"></label><p class="err" id="e" hidden></p><button id="go">Sign in</button><button class="ghost" id="back">Change number</button></div>');
+  $('back').onclick = signIn;
+  $('go').onclick = async function () {
+    var c = $('c').value.replace(/\D/g, ''), e = $('e'); e.hidden = true;
+    if (c.length !== 6) { e.textContent = 'The code has 6 numbers.'; e.hidden = false; return; }
+    this.disabled = true;
+    try {
+      var r = await rpc('claim_phone', { p_phone: phone, p_code: c });
+      if (!r || !r.ok) { e.textContent = 'That code is not right, or it has expired. Check the SMS and try again.'; e.hidden = false; this.disabled = false; return; }
+      try { var tv = await sb.from('app_config').select('value').eq('key', 'terms_version').maybeSingle(); await rpc('record_terms', { p_version: (tv.data && tv.data.value) || 'web', p_app: 'web' }); } catch (x) {}
+      A = await rpc('my_account'); enter();
+    } catch (x) { e.textContent = 'No internet connection. Try again.'; e.hidden = false; this.disabled = false; }
+  };
+}
+
+/* ---------------- home ---------------- */
+function homeTab() {
+  var s = A.settings || {}, off = !!s.dnd, linked = A.gates.length > 0;
+  var today = new Date().toDateString(), td = visits.filter(function (v) { return new Date(v.when).toDateString() === today; });
+  var missed = td.filter(function (v) { return v.result === 'missed'; }).length, msgs = td.filter(function (v) { return !!v.message; }).length;
+  var ends = Math.max(new Date(A.trialEnds || 0).getTime(), new Date(A.paidUntil || 0).getTime()), daysLeft = Math.ceil((ends - Date.now()) / 86400000);
+  var pushOn = A.webPush && canPush && Notification.permission === 'granted';
+  var last = visits[0];
+  el('<div class="row"><div class="grow"><p>' + greet() + '</p><div class="brand"><b>Gate <span>Call</span></b></div></div></div>' +
+    '<div class="card status' + (off ? ' off' : '') + '"><div class="row"><div class="dot">' + (!linked ? '🔳' : off ? '🌙' : '🛡️') + '</div><div class="grow"><b style="font-size:21px">' +
+      (!linked ? 'Almost ready' : off ? 'Calls paused' : "You're live") + '</b><p style="color:rgba(255,255,255,.85)">' +
+      (!linked ? 'Link your gate sign to start' : off ? 'Visitors can leave you a message' : 'You ring here when a visitor scans') + '</p></div></div>' +
+      (linked ? '<div class="row" style="background:rgba(0,0,0,.2);border-radius:14px;padding:10px 12px;margin-top:14px"><span>🏠</span><b class="grow">' + esc(A.gates.length === 1 ? A.gates[0].name : A.gates.length + ' homes') + '</b><span class="small">' + (off ? 'Off' : 'On') + '</span><label class="switch" style="margin:0"><input type="checkbox" id="sw"' + (off ? '' : ' checked') + '><i></i></label></div>'
+              : '<button id="lk">Link my gate sign</button>') + '</div>' +
+    (!pushOn ? '<div class="warn"><b>Turn on call alerts</b><p class="small">' + (iOS && !standalone ? 'On iPhone, first add Gate Call to your Home Screen (Share ⎋ → Add to Home Screen) and open it from there.' : 'So your phone rings even when Gate Call is closed.') + '</p>' + (canPush && !(iOS && !standalone) ? '<button id="pn" style="margin-top:8px">Turn on call alerts</button>' : '') + '</div>' : '') +
+    (A.trialEnds && daysLeft <= 7 ? '<div class="warn" style="border-color:' + (daysLeft <= 0 ? 'var(--red)' : 'var(--gold)') + '"><b>' + (daysLeft <= 0 ? 'Payment needed to keep calls working' : 'Free trial: ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' left') + '</b><button id="py" style="margin-top:8px">Set up card payment</button></div>' : '') +
+    '<h2>Today</h2><div class="row" style="gap:10px">' + chip('👥', td.length, 'Visitors') + chip('📞', missed, 'Missed') + chip('💬', msgs, 'Messages') + '</div>' +
+    '<h2>Last visitor</h2>' + (last ? visitRow(last) : '<div class="card"><p>No visitors yet. When someone scans your gate sign, they show up here.</p></div>'));
+  if ($('sw')) $('sw').onchange = async function () { var on = this.checked; A.settings = await rpc('set_settings', { p: { dnd: !on } }).catch(function () { return A.settings; }); homeTab(); };
+  if ($('lk')) $('lk').onclick = function () { location.hash = '#link'; };
+  if ($('pn')) $('pn').onclick = enablePush;
+  if ($('py')) $('py').onclick = function () { location.hash = '#pay'; };
+}
+function greet() { var h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'; }
+function chip(i, n, l) { return '<div class="card grow" style="margin:0;text-align:center;padding:12px 6px"><div>' + i + '</div><b style="font-size:22px">' + n + '</b><div class="small" style="color:var(--mut)">' + l + '</div></div>'; }
+function visitRow(v) {
+  var col = v.message ? 'var(--violet)' : v.result === 'answered' ? 'var(--green)' : v.result === 'missed' ? 'var(--red)' : 'var(--mut)';
+  var ic = v.message ? '💬' : v.result === 'answered' ? '📞' : '📵';
+  return '<div class="visit"><div class="ic" style="background:rgba(255,255,255,.07)">' + ic + '</div><div class="grow"><b>' + esc(v.message ? v.message.name : 'Visitor') + '</b><p class="small" style="margin:2px 0 0">' +
+    esc(v.message && v.message.reason ? v.message.reason : v.gate) + ' · ' + ago(v.when) + (v.message && v.message.phone ? ' · <a style="color:var(--gold)" href="tel:' + esc(v.message.phone) + '">' + esc(v.message.phone) + '</a>' : '') + (v.reply ? '<br>You replied: ' + esc(v.reply) : '') +
+    '</p></div><span class="tag" style="color:' + col + '">' + (v.message ? 'message' : esc(v.result)) + '</span></div>';
+}
+async function loadVisits() { try { visits = await rpc('my_visits', { p_limit: 100 }) || []; } catch (e) {} if (tab === 'home' || tab === 'visitors') route(); }
+function visitorsTab() { el('<h1>Visitors</h1>' + (visits.length ? '<div class="card">' + visits.map(visitRow).join('') + '</div>' : '<div class="card"><p>No visitors yet.</p></div>')); }
+
+/* ---------------- push (call alerts) ---------------- */
+function u8(b64) { var s = b64.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); }
+async function enablePush() {
+  try {
+    var perm = await Notification.requestPermission();
+    if (perm !== 'granted') { alert('Call alerts are blocked. Allow notifications for Gate Call in your phone settings, then try again.'); return; }
+    var reg = await navigator.serviceWorker.ready;
+    var sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: u8(VAPID) });
+    await rpc('set_web_push', { p: sub.toJSON() });
+    A = await rpc('my_account'); route();
+  } catch (e) { alert('Could not turn on call alerts: ' + (e.message || e)); }
+}
+// Keep the server's copy of this phone's subscription fresh.
+async function refreshPush() { try { if (!canPush || Notification.permission !== 'granted') return; var reg = await navigator.serviceWorker.ready; var sub = await reg.pushManager.getSubscription(); if (sub) await rpc('set_web_push', { p: sub.toJSON() }); } catch (e) {} }
+
+/* ---------------- link a gate sign ---------------- */
+function linkSign() {
+  el('<h1>Link your gate sign</h1><p>The sign number and activation code are on the card that came with your gate sign.</p>' +
+    '<div class="card"><label>Sign number<input id="pl" placeholder="GC100020" autocapitalize="characters" value="' + esc(pendingPlate || '') + '"></label>' +
+    '<label>Activation code<input id="ac" placeholder="ABC-123" autocapitalize="characters"></label>' +
+    '<label>Name for this gate<input id="nm" placeholder="Front gate" value="Front gate"></label>' +
+    '<p class="err" id="e" hidden></p><button id="go">Link this sign</button><button class="ghost" id="cn">Not now</button></div>' +
+    '<p class="small">Tip: scan the QR code on your gate sign with your camera, then tap "Own this sign? Set it up" at the bottom of that page.</p>');
+  $('cn').onclick = function () { pendingPlate = null; try { localStorage.removeItem('gc-plate'); } catch (e) {} location.hash = '#home'; route(); };
+  $('go').onclick = async function () {
+    var e = $('e'); e.hidden = true; this.disabled = true;
+    try {
+      var r = await rpc('link_plate', { p_plate: $('pl').value.trim().toUpperCase(), p_code: $('ac').value.trim(), p_name: $('nm').value.trim() || 'Front gate', p_house: '' });
+      if (String(r).indexOf('ok:') === 0) { pendingPlate = null; try { localStorage.removeItem('gc-plate'); } catch (x) {} A = await rpc('my_account'); location.hash = '#home'; route(); return; }
+      e.textContent = r === 'taken' ? 'This sign is already linked to another account. Call 087 551 1739.' : 'The sign number or activation code is not right. Check the card and try again.';
+    } catch (x) { e.textContent = 'No internet connection. Try again.'; }
+    e.hidden = false; this.disabled = false;
+  };
+}
+
+/* ---------------- more / pay ---------------- */
+function moreTab() {
+  el('<h1>More</h1><div class="card"><p>Signed in as <b style="color:var(--ink)">' + esc(showPhone(A.phone)) + '</b></p>' +
+    '<p>Gate signs: ' + (A.gates.length ? A.gates.map(function (g) { return esc(g.name) + ' (' + esc(g.plateId) + ')'; }).join(', ') : 'none yet') + '</p>' +
+    '<button class="ghost" id="lk">Link another gate sign</button><button class="ghost" id="py">Subscription and payment</button>' +
+    '<button class="ghost" id="tc">Test call alert</button></div>' +
+    '<div class="card"><p>Help: <a style="color:var(--gold)" href="tel:0875511739">087 551 1739</a> · <a style="color:var(--gold)" href="../terms.html">Terms</a> · <a style="color:var(--gold)" href="../privacy.html">Privacy</a></p>' +
+    '<p class="small">Android phone? The Android app rings even more reliably: <a style="color:var(--gold)" href="../app/">download it here</a>.</p>' +
+    '<button class="ghost" id="so">Sign out</button></div>');
+  $('lk').onclick = function () { location.hash = '#link'; };
+  $('py').onclick = function () { location.hash = '#pay'; };
+  $('tc').onclick = function () { ringUI({ visitId: null, gate: 'Test', test: true }); };
+  $('so').onclick = async function () { if (!confirm('Sign out of Gate Call on this phone? Calls will stop ringing here.')) return; await rpc('set_web_push', { p: null }).catch(function () {}); await sb.auth.signOut(); A = null; signIn(); };
+}
+function payTab() {
+  var ends = Math.max(new Date(A.trialEnds || 0).getTime(), new Date(A.paidUntil || 0).getTime());
+  el('<h1>Subscription</h1><div class="card"><p>' + (A.paidUntil && new Date(A.paidUntil) > new Date() ? 'Paid until <b style="color:var(--ink)">' + new Date(A.paidUntil).toLocaleDateString('en-ZA') + '</b>.' : A.trialEnds ? 'Free trial ' + (ends > Date.now() ? 'ends' : 'ended') + ' on <b style="color:var(--ink)">' + new Date(A.trialEnds).toLocaleDateString('en-ZA') + '</b>.' : '') + '</p>' +
+    '<p>Your plan: <b style="color:var(--ink)">R' + Number(A.monthly || 49).toFixed(0) + ' per month</b>, paid by card through PayFast. Cancel any time.</p>' +
+    '<p class="err" id="e" hidden></p><button id="go">Pay by card (PayFast)</button><button class="ghost" id="bk">Back</button></div>');
+  $('bk').onclick = function () { location.hash = '#home'; };
+  $('go').onclick = async function () { this.disabled = true; var r = await fn('pay', { action: 'subscribe' }).catch(function () { return { error: 'No internet connection.' }; }); if (r.url) { location.href = r.url; return; } $('e').textContent = r.error || 'Could not start the payment.'; $('e').hidden = false; this.disabled = false; };
+}
+
+/* ---------------- staying reachable ---------------- */
+async function beat() { try { await rpc('heartbeat', { p_live: document.visibilityState === 'visible' }); } catch (e) {} }
+document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && A) { beat(); loadVisits(); refreshPush(); } });
+var chan = null;
+function listen() {
+  if (chan) return;
+  chan = sb.channel('visits-' + A.id).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'visits', filter: 'account_id=eq.' + A.id }, function (p) {
+    var v = p.new; if (v && v.status === 'ringing') ringUI({ visitId: v.id, gate: (A.gates[0] || {}).name || 'your gate' }); else loadVisits();
+  }).subscribe();
+}
+// Opened from a call alert: is the visitor still waiting?
+async function checkCall(id) { var r = await fn('call-app', { action: 'status', visitId: id }).catch(function () { return {}; }); if (r.status === 'ringing') ringUI({ visitId: id, gate: 'your gate' }); else loadVisits(); }
+navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', function (e) { var d = e.data || {}; if (d.type === 'call' && d.visitId) checkCall(d.visitId); });
+
+/* ---------------- the call ---------------- */
+var cur = null, tone = null, room = null, ringTimer = null, callTimer = null;
+function startTone() {
+  try {
+    var C = window.AudioContext || window.webkitAudioContext, ctx = new C(), g = ctx.createGain(); g.gain.value = 0; g.connect(ctx.destination);
+    [440, 480].forEach(function (f) { var o = ctx.createOscillator(); o.frequency.value = f; o.connect(g); o.start(); });
+    var on = true, iv = setInterval(function () { g.gain.setTargetAtTime(on ? 0.15 : 0, ctx.currentTime, 0.02); on = !on; }, 1000);
+    tone = { stop: function () { clearInterval(iv); try { ctx.close(); } catch (e) {} } };
+    if (navigator.vibrate) navigator.vibrate([600, 400, 600, 400, 600]);
+  } catch (e) {}
+}
+function stopTone() { if (tone) { tone.stop(); tone = null; } if (navigator.vibrate) navigator.vibrate(0); }
+function ringUI(v) {
+  if (cur) return; cur = v; startTone();
+  var c = $('call'); c.className = 'show';
+  c.innerHTML = '<div class="ring">🔔</div><h1>Visitor at ' + esc(v.gate) + '</h1><p>' + (v.test ? 'This is a test. It is how a visitor call looks and sounds.' : 'Someone is at your gate.') + '</p>' +
+    '<div class="btns"><button class="green" id="an">📞 Answer</button>' +
+    '<div class="quick row" style="gap:8px"><button class="ghost" data-r="Coming!">Coming!</button><button class="ghost" data-r="Please leave it at the gate">Leave it at the gate</button></div>' +
+    '<button class="red" id="dc">Decline</button></div>';
+  $('an').onclick = answer;
+  $('dc').onclick = function () { decline(null); };
+  c.querySelectorAll('[data-r]').forEach(function (b) { b.onclick = function () { decline(b.dataset.r); }; });
+  clearTimeout(ringTimer); ringTimer = setTimeout(function () { if (cur && !room) endUI('Missed call'); }, 45000);
+}
+async function decline(reply) { var v = cur; stopTone(); if (v && v.visitId) await rpc('decline_visit', { p_visit: v.visitId, p_reply: reply }).catch(function () {}); endUI(reply ? 'Sent: ' + reply : 'Declined'); }
+async function answer() {
+  var v = cur; stopTone();
+  if (v.test) return liveUI(v, null);
+  $('an').disabled = true; $('an').textContent = 'Connecting…';
+  var r = await fn('call-app', { action: 'answer', visitId: v.visitId }).catch(function () { return {}; });
+  if (r.state !== 'live') return endUI('The visitor has left');
+  await lk;
+  if (!window.LivekitClient) return endUI('Could not connect the call');
+  var LK = window.LivekitClient;
+  room = new LK.Room({ adaptiveStream: false, dynacast: false });
+  room.on(LK.RoomEvent.TrackSubscribed, function (track) {
+    if (track.kind === 'audio') { var a = track.attach(); a.autoplay = true; $('audio').appendChild(a); }
+    if (track.kind === 'video') { var vb = $('vid'); if (vb) { vb.hidden = false; track.attach(vb); } setVidState('on'); }
+  });
+  room.on(LK.RoomEvent.TrackUnsubscribed, function (track) { track.detach(); if (track.kind === 'video') { var vb = $('vid'); if (vb) vb.hidden = true; setVidState('ended'); } });
+  room.on(LK.RoomEvent.DataReceived, function (data) { try { var m = JSON.parse(new TextDecoder().decode(data)); if (m.t === 'video-no') setVidState('no'); } catch (e) {} });
+  room.on(LK.RoomEvent.ParticipantDisconnected, function () { endUI('Call ended'); });
+  room.on(LK.RoomEvent.Disconnected, function () { endUI('Call ended'); });
+  try { await room.connect(r.url, r.token); await room.localParticipant.setMicrophoneEnabled(true); room.startAudio && room.startAudio(); }
+  catch (e) { return endUI('Could not connect the call. Check your internet.'); }
+  liveUI(v, r.callLen);
+}
+function liveUI(v, len) {
+  var c = $('call');
+  c.innerHTML = '<h1>Talking to your visitor</h1><p id="tm">00:00</p><video id="vid" playsinline autoplay muted hidden></video><p id="vs" class="small"></p>' +
+    '<div class="btns"><button id="vb">📷 See who\'s there</button><button class="red" id="hu">Hang up</button></div>';
+  $('hu').onclick = function () { hangup(); };
+  $('vb').onclick = askVideo;
+  var t0 = Date.now(); clearInterval(callTimer);
+  callTimer = setInterval(function () { var s = Math.floor((Date.now() - t0) / 1000); var m = $('tm'); if (m) m.textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); if (len && s >= len) hangup(); }, 500);
+  if (v.test) setTimeout(function () { if (cur && cur.test) endUI('Test finished'); }, 8000);
+}
+function askVideo() {
+  if (!room) { setVidState('test'); return; }
+  room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ t: 'video-req' })), { reliable: true });
+  setVidState('asked');
+}
+function setVidState(s) {
+  var p = $('vs'), b = $('vb'); if (!p) return;
+  p.textContent = { asked: 'Asking the visitor to turn on their camera…', on: 'You can see your visitor (up to 60 seconds).', ended: 'Video ended. You are still talking.', no: 'The visitor did not turn on their camera.', test: 'In a real call, the visitor is asked to turn on their camera.' }[s] || '';
+  if (b) b.hidden = s === 'asked' || s === 'on';
+  if (s === 'ended' || s === 'no') { if (b) { b.hidden = false; b.textContent = '📷 Ask again'; } }
+}
+async function hangup() { var v = cur; if (v && v.visitId) await rpc('hangup_visit', { p_visit: v.visitId }).catch(function () {}); endUI('Call ended'); }
+function endUI(msg) {
+  stopTone(); clearTimeout(ringTimer); clearInterval(callTimer);
+  if (room) { try { room.disconnect(); } catch (e) {} room = null; }
+  $('audio').innerHTML = '';
+  var c = $('call'); c.innerHTML = '<h1>' + esc(msg) + '</h1><button class="ghost" id="cl" style="max-width:420px">Close</button>';
+  $('cl').onclick = function () { c.className = ''; cur = null; loadVisits(); };
+  setTimeout(function () { if (c.querySelector('#cl')) { c.className = ''; cur = null; loadVisits(); } }, 4000);
+}
+
+start();
+</script>
+</body>
+</html>

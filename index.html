@@ -66,6 +66,7 @@ var SALES_URL = 'order/?from=banner';   // order page. NO plate or referral code
    English is the master. The other four are first drafts: have a native speaker check each one before launch. */
 var T = {
   en: { lang:'English',
+    vidAsk:"The owner would like to see you. Turn on your camera?", vidOn:"Turn on camera", vidNo:"No thanks", vidLive:"Your camera is on. It turns off by itself after 60 seconds.", vidStop:"Turn off camera", ownSign:"Own this sign? Set it up",
     leadName:"Your name", leadPhone:"Cellphone number", leadEmail:"Email (optional)", leadSuburb:"Suburb (optional)", leadBtn:"Call me about Gate Call", leadDone:"Thank you! We will call you soon to set up your own gate sign.", leadNeed:"Please type your name and cellphone number.", orderOnline:"Or order online",
     micStep:"Step 1: Turn on your microphone", micWhy:"So the people inside can hear you. Your phone will ask: tap Allow.", micBtn:"Turn on microphone", micWait:"Waiting for you to tap Allow…", micOn:"Microphone is on", micTest:"Say something: the bar moves when your phone can hear you.", callStep:"Step 2: Call the house", micBlocked:"Your microphone is blocked", micHow:"The owner cannot hear you without it. Tap the lock icon (🔒) next to the web address at the top, tap Permissions or Site settings, set Microphone to Allow, then tap Try again.", noMicTitle:"This app can't use your microphone", noMicBody:"Some QR scanner apps cannot use the microphone. Open this page in your normal browser to call.", openChrome:"Open in Chrome", iphone:"On iPhone: tap the share or compass button and choose Open in Safari.", msgInstead:"Leave a written message instead", callTitle:'Call the house', callBody:'The people here will hear your call on their phone. They will not see your number.', callBtn:'Call the house',
     someRec:'Some calls may be recorded.', calling:'Calling…', waiting:'Waiting for someone to answer.', mic:'Please allow the microphone so they can hear you.', cancel:'Cancel',
@@ -80,6 +81,7 @@ var T = {
     oops:'Something went wrong. Check your internet and try again.', again:'Try again',
     privacy:'We keep a random device identifier, your IP address and browser type to prevent abuse. If you leave a message we share your name, reason and any number or photo you add with the household you are visiting.' },
   zu: { lang:'isiZulu',
+    vidAsk:"Umnikazi uthanda ukukubona. Vula ikhamera yakho?", vidOn:"Vula ikhamera", vidNo:"Cha, ngiyabonga", vidLive:"Ikhamera yakho ivuliwe. Izicisha ngemuva kwemizuzwana engama-60.", vidStop:"Cisha ikhamera", ownSign:"Ungumnikazi walolu phawu? Lusethe",
     leadName:"Igama lakho", leadPhone:"Inombolo yeselula", leadEmail:"I-imeyili (uma uthanda)", leadSuburb:"Indawo ohlala kuyo (uma uthanda)", leadBtn:"Ngishayele mayelana ne-Gate Call", leadDone:"Siyabonga! Sizokushayela maduze ukuze sikufakele uphawu lwakho lwesango.", leadNeed:"Sicela ubhale igama lakho nenombolo yeselula.", orderOnline:"Noma u-oda ku-inthanethi",
     micStep:"Isinyathelo 1: Vula imakrofoni yakho", micWhy:"Ukuze abantu abangaphakathi bakuzwe. Ifoni yakho izobuza: thepha u-Allow (Vumela).", micBtn:"Vula imakrofoni", micWait:"Silinde ukuthi uthephe u-Allow…", micOn:"Imakrofoni ivuliwe", micTest:"Yisho okuthile: ibha iyanyakaza uma ifoni yakho ikuzwa.", callStep:"Isinyathelo 2: Shayela indlu", micBlocked:"Imakrofoni yakho ivinjiwe", micHow:"Umnikazi akakwazi ukukuzwa ngaphandle kwayo. Thepha uphawu lokhiye (🔒) eduze kwekheli lewebhu phezulu, thepha Permissions noma Site settings, setha i-Microphone ibe ngu-Allow, bese uthepha Zama futhi.", noMicTitle:"Le app ayikwazi ukusebenzisa imakrofoni yakho", noMicBody:"Ezinye izinhlelo zokuskena i-QR azikwazi ukusebenzisa imakrofoni. Vula leli khasi kubhrawuza yakho evamile ukuze ushaye.", openChrome:"Vula ku-Chrome", iphone:"Ku-iPhone: thepha inkinobho yokwabelana noma ye-compass bese ukhetha Open in Safari.", msgInstead:"Shiya umlayezo obhaliwe esikhundleni", callTitle:'Shayela indlu', callBody:'Abantu balapha bazozwa ucingo lwakho ocingweni lwabo. Ngeke ayibone inombolo yakho.', callBtn:'Shayela indlu',
     someRec:'Ezinye izingcingo zingaqoshwa.', calling:'Iyashaya…', waiting:'Silinde umuntu ozophendula.', mic:'Sicela uvumele imakrofoni ukuze bakuzwe.', cancel:'Khansela',
@@ -93,6 +95,7 @@ var T = {
     oops:'Kukhona okungahambanga kahle. Hlola i-inthanethi bese uzama futhi.', again:'Zama futhi',
     privacy:'Sigcina inombolo yedivayisi engahleliwe, ikheli lakho le-IP nohlobo lwesiphequluli ukuvimbela ukuhlukumeza. Uma ushiya umlayezo, sabelana ngegama lakho, isizathu nanoma iyiphi inombolo noma isithombe osifakayo nomndeni owuvakashele.' },
   af: { lang:'Afrikaans',
+    vidAsk:"Die eienaar wil jou graag sien. Skakel jou kamera aan?", vidOn:"Skakel kamera aan", vidNo:"Nee dankie", vidLive:"Jou kamera is aan. Dit skakel self af na 60 sekondes.", vidStop:"Skakel kamera af", ownSign:"Is dit jou bord? Stel dit op",
     leadName:"Jou naam", leadPhone:"Selfoonnommer", leadEmail:"E-pos (opsioneel)", leadSuburb:"Voorstad (opsioneel)", leadBtn:"Bel my oor Gate Call", leadDone:"Dankie! Ons bel jou binnekort om jou eie hekbord op te stel.", leadNeed:"Tik asseblief jou naam en selfoonnommer.", orderOnline:"Of bestel aanlyn",
     micStep:"Stap 1: Skakel jou mikrofoon aan", micWhy:"Sodat die mense binne jou kan hoor. Jou foon sal vra: tik Allow (Laat toe).", micBtn:"Skakel mikrofoon aan", micWait:"Wag dat jy Allow tik…", micOn:"Mikrofoon is aan", micTest:"Sê iets: die balk beweeg as jou foon jou kan hoor.", callStep:"Stap 2: Bel die huis", micBlocked:"Jou mikrofoon is geblokkeer", micHow:"Die eienaar kan jou nie daarsonder hoor nie. Tik die slot-ikoon (🔒) langs die webadres bo-aan, tik Permissions of Site settings, stel Microphone op Allow, en tik dan Probeer weer.", noMicTitle:"Hierdie app kan nie jou mikrofoon gebruik nie", noMicBody:"Sommige QR-skandeerder-apps kan nie die mikrofoon gebruik nie. Maak hierdie bladsy in jou gewone blaaier oop om te bel.", openChrome:"Maak oop in Chrome", iphone:"Op iPhone: tik die deel- of kompasknoppie en kies Open in Safari.", msgInstead:"Los eerder ’n geskrewe boodskap", callTitle:'Bel die huis', callBody:'Die mense hier sal jou oproep op hul foon hoor. Hulle sal nie jou nommer sien nie.', callBtn:'Bel die huis',
     someRec:'Sommige oproepe kan opgeneem word.', calling:'Bel…', waiting:'Wag vir iemand om te antwoord.', mic:'Laat asseblief die mikrofoon toe sodat hulle jou kan hoor.', cancel:'Kanselleer',
@@ -106,6 +109,7 @@ var T = {
     oops:'Iets het verkeerd geloop. Kyk na jou internet en probeer weer.', again:'Probeer weer',
     privacy:'Ons hou ’n ewekansige toestel-ID, jou IP-adres en blaaiertipe om misbruik te voorkom. As jy ’n boodskap los, deel ons jou naam, rede en enige nommer of foto wat jy byvoeg met die huishouding wat jy besoek.' },
   ts: { lang:'Xitsonga',
+    vidAsk:"N’wini u lava ku ku vona. Pfula khamera ya wena?", vidOn:"Pfula khamera", vidNo:"E-e, inkomu", vidLive:"Khamera ya wena yi pfuriwile. Yi ta tima hi yoxe endzhaku ka 60 wa tisekoni.", vidStop:"Tima khamera", ownSign:"I xikombiso xa wena? Xi veke",
     leadName:"Vito ra wena", leadPhone:"Nomboro ya selfoni", leadEmail:"Imeyili (loko u lava)", leadSuburb:"Ndhawu (loko u lava)", leadBtn:"Ndzi ringeleni hi Gate Call", leadDone:"Inkomu! Hi ta ku ringela ku nga ri khale ku ku vekela xikombiso xa wena xa gede.", leadNeed:"Hi kombela u tsala vito ra wena na nomboro ya selfoni.", orderOnline:"Kumbe u oda eka inthanete",
     micStep:"Goza 1: Pfula maykrofoni ya wena", micWhy:"Leswaku vanhu va le ndzeni va ku twa. Foni ya wena yi ta vutisa: thepha Allow (Pfumela).", micBtn:"Pfula maykrofoni", micWait:"Hi rindzele leswaku u thepha Allow…", micOn:"Maykrofoni yi pfuriwile", micTest:"Vulavula: bara yi famba loko foni ya wena yi ku twa.", callStep:"Goza 2: Ringela yindlu", micBlocked:"Maykrofoni ya wena yi siviwile", micHow:"N’wini a nge ku twi handle ka yona. Thepha xifaniso xa loko (🔒) ekusuhi na adirese ya webu ehenhla, thepha Permissions kumbe Site settings, veka Microphone eka Allow, kutani u thepha Ringeta nakambe.", noMicTitle:"App leyi a yi swi koti ku tirhisa maykrofoni ya wena", noMicBody:"Tiapp tin’wana to skena QR a ti swi koti ku tirhisa maykrofoni. Pfula pheji leyi eka bhrawuza ya wena leyi u yi tolovela ku ringela.", openChrome:"Pfula eka Chrome", iphone:"Eka iPhone: thepha buthoni ya ku avelana kumbe ya khampasi u hlawula Open in Safari.", msgInstead:"Siya rungula leri tsariweke ematshan’wini", callTitle:'Ringela yindlu', callBody:'Vanhu va laha va ta twa riqingho ra wena eka foni ya vona. A va nge yi voni nomboro ya wena.', callBtn:'Ringela yindlu',
     someRec:'Swiqingho swin’wana swi nga rhekhodiwa.', calling:'Ri ringa…', waiting:'Hi rindzele un’wana leswaku a hlamula.', mic:'Hi kombela u pfumelela maykrofoni leswaku va ku twa.', cancel:'Khansela',
@@ -119,6 +123,7 @@ var T = {
     oops:'Ku na xihoxo. Kambela inthanete u tlhela u ringeta.', again:'Ringeta nakambe',
     privacy:'Hi hlayisa nomboro ya xitirhisiwa leyi nga hlawuriwangiki, adirese ya wena ya IP na muxaka wa bulawuzara ku sivela ku tirhisiwa hi ndlela yo biha. Loko u siya rungula, hi avelana vito ra wena, xivangelo na nomboro kumbe xifaniso lexi u xi engetelaka na ndyangu lowu u wu endzelaka.' },
   st: { lang:'Sesotho',
+    vidAsk:"Mong o batla ho o bona. Bulela khamera ya hao?", vidOn:"Bulela khamera", vidNo:"Tjhe, ke a leboha", vidLive:"Khamera ya hao e butswe. E tla itima kamora metsotswana e 60.", vidStop:"Tima khamera", ownSign:"Ke letshwao la hao? Le hlophise",
     leadName:"Lebitso la hao", leadPhone:"Nomoro ya selefouno", leadEmail:"Imeile (ha o rata)", leadSuburb:"Sebaka (ha o rata)", leadBtn:"Ntetsetse ka Gate Call", leadDone:"Re a leboha! Re tla o letsetsa haufinyane ho o kenyetsa letshwao la hao la heke.", leadNeed:"Ka kopo ngola lebitso la hao le nomoro ya selefouno.", orderOnline:"Kapa o odare inthaneteng",
     micStep:"Mohato wa 1: Bulela maekrofone ya hao", micWhy:"Hore batho ba ka hare ba o utlwe. Fono ya hao e tla botsa: tobetsa Allow (Dumella).", micBtn:"Bulela maekrofone", micWait:"Re emetse hore o tobetse Allow…", micOn:"Maekrofone e butswe", micTest:"Bua ho hong: bara e a sisinyeha ha fono ya hao e o utlwa.", callStep:"Mohato wa 2: Letsetsa ntlo", micBlocked:"Maekrofone ya hao e thibetswe", micHow:"Mong a ke ke a o utlwa ntle le yona. Tobetsa letshwao la senotlolo (🔒) pela aterese ya webo kaholimo, tobetsa Permissions kapa Site settings, beha Microphone ho Allow, ebe o tobetsa Leka hape.", noMicTitle:"App ena e ke ke ya sebedisa maekrofone ya hao", noMicBody:"Diapp tse ding tsa ho skena QR di ke ke tsa sebedisa maekrofone. Bula leqephe lena ho bhrawusara ya hao e tlwaelehileng ho letsa.", openChrome:"Bula ho Chrome", iphone:"Ho iPhone: tobetsa konopo ya ho arolelana kapa ya khampase ebe o kgetha Open in Safari.", msgInstead:"Siya molaetsa o ngotsweng ho e na le hoo", callTitle:'Letsetsa ntlo', callBody:'Batho ba mona ba tla utlwa mohala wa hao fonong ya bona. Ba ke ke ba bona nomoro ya hao.', callBtn:'Letsetsa ntlo',
     someRec:'Mehala e meng e ka rekotwa.', calling:'E a letsa…', waiting:'Re emetse motho ya tla araba.', mic:'Ka kopo dumella maekrofone hore ba o utlwe.', cancel:'Hlakola',
@@ -168,7 +173,7 @@ function el(html, s) {
   if (s) screen = s;
   document.documentElement.lang = L === 'st' ? 'st' : L;
   app.innerHTML = '<div class="top"><div class="brand">Gate Call</div>' + langPicker() + '</div>' + html;
-  document.getElementById('foot').textContent = t('privacy');
+  document.getElementById('foot').innerHTML = esc(t('privacy')) + (PLATE ? ' <a href="home/?plate=' + encodeURIComponent(PLATE) + '" style="color:var(--gold)">' + esc(t('ownSign')) + '</a>' : '');
   document.getElementById('lang').onchange = function (e) { L = e.target.value; try { localStorage.setItem('gc_lang', L); } catch (x) {} redraw(); };
   var h = app.querySelector('h1'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
 }
@@ -290,6 +295,7 @@ function connect(r) {
   });
   room.on(LK.RoomEvent.AudioPlaybackStatusChanged, function () { if (room && !room.canPlaybackAudio) soundButton(); });
   room.on(LK.RoomEvent.ParticipantDisconnected, function () { if (screen === live) ended(); });
+  room.on(LK.RoomEvent.DataReceived, function (data) { try { var m = JSON.parse(new TextDecoder().decode(data)); if (m.t === 'video-req') videoAsk(); } catch (e) {} });
   joined = room.connect(r.url, r.token).then(function () {
     var tr = micStream && micStream.getAudioTracks()[0];
     if (tr && tr.readyState === 'live') return room.localParticipant.publishTrack(tr, { source: LK.Track.Source.Microphone, name: 'microphone' });
@@ -306,6 +312,33 @@ function soundButton() {
   b.onclick = function () { if (room) room.startAudio().catch(function () {}); [].forEach.call($('audio').querySelectorAll('audio'), function (a) { a.play && a.play().catch(function () {}); }); b.remove(); };
   var h = $('hang'); h.parentNode.insertBefore(b, h);
 }
+
+/* ---- Owner asks to see who is at the gate: the visitor chooses to turn on their camera (60 seconds, then back to voice). ---- */
+var cam = null, camTimer = null;
+function videoAsk() {
+  if (screen !== live || $('vask') || cam) return;
+  var d = document.createElement('div'); d.className = 'card'; d.id = 'vask';
+  d.innerHTML = '<b>📷 ' + t('vidAsk') + '</b><button id="vyes">' + t('vidOn') + '</button><button class="ghost" id="vno">' + t('vidNo') + '</button>';
+  var h = $('hang'); h.parentNode.insertBefore(d, h);
+  $('vno').onclick = function () { d.remove(); sendData({ t: 'video-no' }); };
+  $('vyes').onclick = function () {
+    $('vyes').disabled = true;
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } }).then(function (st) {
+      var tr = st.getVideoTracks()[0]; cam = st;
+      return room.localParticipant.publishTrack(tr, { source: window.LivekitClient.Track.Source.Camera, name: 'camera', simulcast: false }).then(function () {
+        d.innerHTML = '<video id="self" playsinline autoplay muted style="width:100%;border-radius:14px;background:#000"></video><p>' + t('vidLive') + '</p><button class="ghost" id="voff">' + t('vidStop') + '</button>';
+        $('self').srcObject = st; $('voff').onclick = stopCam;
+        camTimer = setTimeout(stopCam, 60000);
+      });
+    }).catch(function () { d.remove(); sendData({ t: 'video-no' }); });
+  };
+}
+function stopCam() {
+  clearTimeout(camTimer);
+  if (cam) { var tr = cam.getVideoTracks()[0]; try { if (room && tr) room.localParticipant.unpublishTrack(tr); } catch (e) {} cam.getTracks().forEach(function (x) { x.stop(); }); cam = null; }
+  var d = $('vask'); if (d) d.remove();
+}
+function sendData(o) { try { if (room) room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(o)), { reliable: true }); } catch (e) {} }
 
 function live(r) {
   stop();
@@ -325,7 +358,7 @@ function live(r) {
 }
 
 function ended() {
-  var v = visit; stop(); hangupRoom();
+  var v = visit; stop(); stopCam(); hangupRoom();
   if (v) api('end', { visitId: v.visitId, reason: 'hangup' });
   el('<h1>' + t('ended') + '</h1><p>' + t('thanks') + '</p>' + salesBanner() + '<button class="ghost" id="again">' + t('back') + '</button>', ended);
   wireSales(); $('again').onclick = home;
