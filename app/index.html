@@ -24,6 +24,9 @@
   ol { margin:0; padding-left: 20px; color: var(--mut); line-height: 1.6; }
   ol b { color: var(--ink); }
   .ios { color: var(--mut); font-size: 14px; }
+  .qr { display:flex; gap:16px; align-items:center; }
+  .qr img { background:#fff; border-radius:12px; padding:6px; flex:none; }
+  @media (max-width: 420px) { .qr img { width:130px; height:130px; } }
   footer { color: var(--mut); font-size: 13px; text-align: center; margin-top: 28px; }
   footer a { color: var(--gold); }
 </style>
@@ -34,6 +37,11 @@
   <img class="hero" src="splash.jpg" alt="A courier scans the Gate Call sign on a gate and the owner answers from the beach">
   <a class="btn" id="dl" href="https://ntsakolepere.github.io/gatecall-visit/app/GateCall.apk">⬇ Download for Android</a>
   <p class="sub" id="ver">Free download for Android phones</p>
+
+  <div class="card qr">
+    <img src="qr.png" alt="QR code for this download page" width="180" height="180">
+    <div><h2>Share it</h2><p class="ios">Scan this code with any Android phone camera to open this page and download Gate Call.</p></div>
+  </div>
 
   <div class="card">
     <h2>How to install</h2>
@@ -60,7 +68,7 @@
 </main>
 <script>
 fetch('version.json', { cache: 'no-store' }).then(r => r.json()).then(v => {
-  document.getElementById('ver').textContent = 'Version ' + v.latest + ' · Free download for Android phones';
+  document.getElementById('ver').textContent = 'Version ' + v.latest + ' · Free download for Android phones' + (v.notes ? ' · New: ' + v.notes : '');
   if (v.url) document.getElementById('dl').href = v.url;
 }).catch(() => {});
 </script>
