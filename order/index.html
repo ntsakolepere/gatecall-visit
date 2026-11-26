@@ -63,15 +63,18 @@ var KINDS = {
   complex:    { title:'Complex', head:'Complexes, townhouses and flats', blurb:'One long sign with a QR code for every unit. Visitors scan the unit they are visiting.', perUnit:true, unit:'unit',
                 pts:['Every unit answers on their own phone','No guard phoning each unit','Billed to each owner or the body corporate'] },
   officepark: { title:'Office park', head:'Office parks', blurb:'One bigger sign listing every company, each with its own QR code.', perUnit:true, unit:'company',
-                pts:['Visitors scan the company they are here to see','Less work for reception and security','Change companies as tenants come and go'] }
+                pts:['Visitors scan the company they are here to see','Less work for reception and security','Change companies as tenants come and go'] },
+  school:     { title:'School', head:'Schools and crèches', blurb:'Your school name and crest on the gate sign. Parents, visitors and deliveries scan and call reception or the guard.', perUnit:false,
+                pts:['Parents and visitors reach the office even when the gate is locked','Fewer people waiting at the gate, safer for learners','Your crest, school name and motto on the sign'] }
 };
 var DESIGNS = {
   home: ['Ndlovu House','The Mokoena Family','Dlamini Home','Van Wyk Residence','Number 31'],
   business: ['Steel with logo','Black with logo','Brass with logo','Steel, workshop style','Black, office style'],
   complex: ['4 units in a row, steel','6 units with names, black','8 units, brass','3 units, steel','6 units in one line, black'],
-  officepark: ['6 companies, steel','4 companies, black','8 companies, brass','6 companies in one line, steel','5 companies, black']
+  officepark: ['6 companies, steel','4 companies, black','8 companies, brass','6 companies in one line, steel','5 companies, black'],
+  school: ['Sunrise Primary School','Ithemba High School','Greenfields Academy','Acacia Ridge Secondary','Little Stars Pre-School']
 };
-var info = { home:0, business:0, complex:0, officepark:0, install:0, monthly:{ home:49, business:99, complex:49, officepark:67 }, trialDays:7 };
+var info = { home:0, business:0, complex:0, officepark:0, school:0, install:0, monthly:{ home:49, business:99, complex:49, officepark:67, school:99 }, trialDays:7 };
 var o = { kind:'home', design:0, units:4, companies:'', name:'', address:'', suburb:'', phone:'', email:'', message:'', install:true, who:'' };
 try { var saved = JSON.parse(sessionStorage.getItem('gc_order') || 'null'); if (saved) o = Object.assign(o, saved); } catch (e) {}
 function keep() { try { sessionStorage.setItem('gc_order', JSON.stringify(o)); } catch (e) {} }
@@ -122,12 +125,13 @@ function designs() {
 
 /* ---------- 3. Details ---------- */
 function details() {
-  var k = o.kind, nameLabel = { home:'Family or house name on the sign', business:'Business name on the sign', complex:'Complex name', officepark:'Office park name' }[k];
+  var k = o.kind, nameLabel = { home:'Family or house name on the sign', business:'Business name on the sign', complex:'Complex name', officepark:'Office park name', school:'School name on the sign' }[k];
   show('<h1>Your details</h1>' +
-    '<label>' + nameLabel + '<input id="name" value="' + esc(o.name) + '" maxlength="80" placeholder="' + { home:'Ndlovu House', business:'Mabaso Plumbing', complex:'Jacaranda Gardens', officepark:'Kingfisher Office Park' }[k] + '"></label>' +
+    '<label>' + nameLabel + '<input id="name" value="' + esc(o.name) + '" maxlength="80" placeholder="' + { home:'Ndlovu House', business:'Mabaso Plumbing', complex:'Jacaranda Gardens', officepark:'Kingfisher Office Park', school:'Sunrise Primary School' }[k] + '"></label>' +
     (k === 'complex' ? '<label>How many units?<input id="units" type="number" min="1" max="200" inputmode="numeric" value="' + esc(o.units) + '"></label>' : '') +
     (k === 'officepark' ? '<label>Companies (one per line)<textarea id="companies" placeholder="Acme Logistics\nBright Dental">' + esc(o.companies) + '</textarea></label>' : '') +
     (k === 'home' ? '<label>Message on the sign (optional)<input id="message" value="' + esc(o.message) + '" maxlength="60" placeholder="Beware of the dog"></label>' : '') +
+    (k === 'school' ? '<label>School motto (optional)<input id="message" value="' + esc(o.message) + '" maxlength="60" placeholder="Learning for life"></label><p class="small">We ask for your school crest or logo by WhatsApp or email after you order.</p>' : '') +
     (k === 'business' ? '<label>Tagline (optional)<input id="message" value="' + esc(o.message) + '" maxlength="60" placeholder="Plumbing and gas since 2005"></label><p class="small">We ask for your logo by WhatsApp or email after you order.</p>' : '') +
     '<label>Street address<input id="address" value="' + esc(o.address) + '" maxlength="200" autocomplete="street-address" placeholder="14 Kestrel Street"></label>' +
     '<label>Suburb<input id="suburb" value="' + esc(o.suburb) + '" maxlength="80" autocomplete="address-level3" placeholder="Lenasia South"></label>' +
