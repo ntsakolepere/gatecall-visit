@@ -16,7 +16,9 @@
   header img { width:52px; height:52px; border-radius:14px; }
   h1 { font-size: 26px; margin: 0; }
   h1 span { color: var(--gold); }
-  .hero { width:100%; border-radius:22px; margin:22px 0 8px; display:block; }
+  .lead { color:var(--mut); font-size:17px; margin:16px 0 0; }
+  .hero { width:70%; max-width:300px; border-radius:18px; margin:22px auto 0; display:block; }
+  .alt { display:block; text-align:center; color:var(--gold); font-size:14px; margin-top:12px; }
   .btn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:17px; border-radius:16px; background:var(--gold); color:#2a1d05; font-weight:800; font-size:18px; text-decoration:none; margin-top:18px; }
   .sub { color:var(--mut); text-align:center; font-size:14px; margin-top:8px; }
   .card { background:var(--card); border-radius:18px; padding:18px; margin-top:22px; }
@@ -34,9 +36,12 @@
 <body>
 <main>
   <header><img src="icon.png" alt=""><h1>Gate <span>Call</span></h1></header>
-  <img class="hero" src="splash.jpg" alt="A courier scans the Gate Call sign on a gate and the owner answers from the beach">
+  <p class="lead">Visitors scan the sign on your gate and your phone rings, wherever you are.</p>
   <a class="btn" id="dl" href="https://gatecall.camedia.online/app/GateCall.apk">⬇ Download for Android</a>
   <p class="sub" id="ver">Free download for Android phones</p>
+
+  <a class="alt" id="chrome" hidden>Download not starting? Tap here to open this page in Chrome</a>
+  <img class="hero" src="splash.jpg" alt="A courier scans the Gate Call sign on a gate and the owner answers from the beach">
 
   <div class="card qr">
     <img src="qr.png" alt="QR code for this download page" width="180" height="180">
@@ -71,6 +76,16 @@ fetch('version.json', { cache: 'no-store' }).then(r => r.json()).then(v => {
   document.getElementById('ver').textContent = 'Version ' + v.latest + ' · Free download for Android phones' + (v.notes ? ' · New: ' + v.notes : '');
   if (v.url) document.getElementById('dl').href = v.url;
 }).catch(() => {});
+// Inside a QR-scanner app the download can be blocked: offer Chrome on Android.
+(function () {
+  var ua = navigator.userAgent;
+  if (/Android/i.test(ua)) {
+    var a = document.getElementById('chrome');
+    a.href = 'intent://' + location.host + location.pathname + '#Intent;scheme=https;package=com.android.chrome;end';
+    if (/; wv\)|FBAN|FBAV|Instagram|Line\/|GSA\//i.test(ua)) a.hidden = false; else setTimeout(function () { a.hidden = false; }, 6000);
+  }
+  document.getElementById('dl').addEventListener('click', function () { setTimeout(function () { document.getElementById('chrome').hidden = !/Android/i.test(ua); }, 1500); });
+})();
 </script>
 </body>
 </html>
