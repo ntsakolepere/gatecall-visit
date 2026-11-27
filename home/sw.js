@@ -4,6 +4,8 @@ self.addEventListener('activate', function (e) { e.waitUntil(self.clients.claim(
 self.addEventListener('push', function (e) {
   var d = {}; try { d = e.data.json(); } catch (x) { d = { title: 'Gate Call', body: e.data ? e.data.text() : '' }; }
   var call = d.type === 'call';
+  // Tell the server this phone is ringing, so it does not fall back to a normal phone call.
+  if (call && d.ack) fetch('https://jcksphuqrrwitmmmgzov.supabase.co/functions/v1/visit', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: 'sb_publishable_KdYI50_eGRfM2AUhcA5CfA_bBrOB_B7' }, body: JSON.stringify({ action: 'ack', visitId: d.visitId, ack: d.ack }) }).catch(function () {});
   e.waitUntil(self.registration.showNotification(d.title || 'Gate Call', {
     body: d.body || '', tag: d.tag || 'gatecall', renotify: true, requireInteraction: call,
     icon: 'icon-192.png', badge: 'icon-192.png', vibrate: call ? [600, 300, 600, 300, 600, 300, 600] : [200],
